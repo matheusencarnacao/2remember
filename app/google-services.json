@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "325152889927",
+    "firebase_url": "https://remember-4c39b.firebaseio.com",
+    "project_id": "remember-4c39b",
+    "storage_bucket": "remember-4c39b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:325152889927:android:ff249d3c018794b8",
+        "android_client_info": {
+          "package_name": "br.com.tworemember.localizer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "325152889927-ra353gus3nb5uherujqefsaqh149rehr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.com.tworemember.localizer",
+            "certificate_hash": "cdcced7646b028a5a28b0df3fb88de8b35c3a09d"
+          }
+        },
+        {
+          "client_id": "325152889927-7q0mbk0gts81jttho9njeur4e6k4vv6h.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtfS0wdY8lNNe4kQzToLUpJKWPw95AGrU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "325152889927-7q0mbk0gts81jttho9njeur4e6k4vv6h.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

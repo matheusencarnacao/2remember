@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
 
             override fun onCancel() {
-                Log.d("MainActivity!", "facebook:onCancel").
+                Log.d("MainActivity!", "facebook:onCancel")
             }
 
             override fun onError(error: FacebookException) {
@@ -147,9 +147,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     val user = auth.currentUser
 
                     val users = db.getReference("/users")
-                    users.child(user!!.uid).addListenerForSingleValueEvent(object: ValueEventListener(){
+                    users.child(user!!.uid).addListenerForSingleValueEvent(object: ValueEventListener {
                         override fun onDataChange(p0: DataSnapshot) {
-                            val mUser = p0.getValue(User.class)
+
                         }
 
                         override fun onCancelled(p0: DatabaseError) {

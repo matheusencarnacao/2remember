@@ -13,20 +13,16 @@ import com.facebook.FacebookException
 import com.facebook.login.LoginResult
 import com.facebook.login.widget.LoginButton
 import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.firebase.auth.FacebookAuthProvider
-import com.google.firebase.auth.FirebaseAuth
-import kotlinx.android.synthetic.main.activity_main.*
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.common.SignInButton
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
+import com.google.firebase.auth.FacebookAuthProvider
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import kotlinx.android.synthetic.main.activity_main.*
 
 
 class MainActivity : AppCompatActivity(), View.OnClickListener {
@@ -67,7 +63,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             .requestEmail()
             .build()
         // Build a GoogleSignInClient with the options specified by gso.
-        googleSignInClient = GoogleSignIn.getClient(this, gso);
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
     }
 
     private fun signIn() {
@@ -97,7 +93,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     // Sign in success, update UI with the signed-in user's information
                     Log.d("MainActivity", "signInWithCredential:success")
                     val user = auth.currentUser
-
+                    user?.let { updateDb(it) }
                 } else {
                     // If sign in fails, display a message to the user.
                     Log.w("MainActivity", "signInWithCredential:failure", task.exception)
@@ -154,15 +150,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun updateDb(user: FirebaseUser){
         val users = db.getReference("/users")
-        users.child(user.uid).addListenerForSingleValueEvent(object: ValueEventListener {
-            override fun onDataChange(p0: DataSnapshot) {
-
-            }
-
-            override fun onCancelled(p0: DatabaseError) {
-
-            }
-        })
+        user.email?.let { users.child(it.toBase64()).setValue(user) }
     }
 
     private val facebookCallback = object : FacebookCallback<LoginResult> {
@@ -177,7 +165,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         }
 
         override fun onError(error: FacebookException) {
-            Log.d("MainActivity: ", "facebook:onError", error)
+            Log.d("MainActivity: ", "facebook:onError", error.cause)
             Toast.makeText(this@MainActivity, "Ops! Ocorreu um erro ao logar, por favor tente novamente", Toast.LENGTH_SHORT).show()
         }
     }

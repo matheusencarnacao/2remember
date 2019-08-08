@@ -2,4 +2,6 @@
     <string name="app_name">Localizer</string>
     <string name="facebook_app_id">453419798534653</string>
     <string name="fb_login_protocol_scheme">fb453419798534653</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="msg_location_required">It\'s necessary the location to find your old person</string>
 </resources>

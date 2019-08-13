@@ -33,6 +33,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var googleSignInClient: GoogleSignInClient
     private val RC_SIGN_IN = 2000
 
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -44,11 +46,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         configureGoogleClient()
         sign_in_button.setOnClickListener(this)
-
-        // Check for existing Google Sign In account, if the user is already signed in
-        // the GoogleSignInAccount will be non-null.
-        //val account = GoogleSignIn.getLastSignedInAccount(this)
-        //updateUI(account)
 
         val buttonFacebookLogin = login_button as LoginButton
 
@@ -80,7 +77,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun goToHome(){
-
+        val intent = Intent(this, MapsActivity::class.java)
+        startActivity(intent)
+        finish()
     }
 
     private fun handleFacebookAccessToken(token: AccessToken) {

@@ -1,6 +1,7 @@
 package br.com.tworemember.localizer
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
@@ -17,11 +18,14 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import android.location.Criteria
+import android.location.LocationManager
+
+
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,8 +35,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-
     }
 
     private fun getLocation(){
@@ -41,15 +43,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             askPermission()
             return
         }
-        fusedLocationClient.lastLocation
-            .addOnSuccessListener { location : Location? ->
-                // Got last known location. In some rare situations this can be null.
-                location?.let {
-                    val myLocation = LatLng(it.latitude, it.longitude)
-                    mMap.addMarker(MarkerOptions().position(myLocation).title("You are here!"))
-                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 15f))
-                }
-            }
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val criteria = Criteria()
+        val bestProvider = locationManager.getBestProvider(criteria, false)
+        val location = locationManager.getLastKnownLocation(bestProvider)
+        val lat = try{ location.latitude } catch (e: NullPointerException) { -1.0 }
+        val lon = try { location.longitude } catch (e: NullPointerException) { -1.0 }
+        val myLocation = LatLng(lat, lon)
+        mMap.addMarker(MarkerOptions().position(myLocation).title("You are here!"))
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 15f))
     }
 
     private fun askPermission(){

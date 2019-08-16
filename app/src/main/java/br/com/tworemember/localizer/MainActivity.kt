@@ -34,7 +34,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private val RC_SIGN_IN = 2000
 
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -77,8 +76,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun goToHome(){
+        val dialog = ProgressDialogProvider.showProgressDialog(this, "Realizando login...")
         val intent = Intent(this, MapsActivity::class.java)
         startActivity(intent)
+        dialog.dismiss()
         finish()
     }
 
@@ -149,7 +150,11 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun updateDb(user: FirebaseUser){
         val users = db.getReference("/users")
-        user.email?.let { users.child(it.toBase64()).setValue(user) }
+        user.email?.let {
+            val email64 = it.toBase64()
+            users.child(email64).setValue(user)
+            goToHome()
+        }
     }
 
     private val facebookCallback = object : FacebookCallback<LoginResult> {

@@ -5,7 +5,7 @@ import java.util.*
 class Position(
     val uuid: String,
     val lat: Double,
-    val long: Double,
+    val lng: Double,
     val date: Date,
     val deviceId: String
 )

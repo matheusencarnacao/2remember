@@ -18,8 +18,8 @@ class FirebaseMessageService : FirebaseMessagingService() {
             if (it.data.isNotEmpty()) {
                 Log.d(tag, "Message data payload: " + it.data);
 
-                if (/* Check if data needs to be processed by long running job */ true) {
-                    // For long-running tasks (10 seconds or more) use Firebase Job Dispatcher.
+                if (/* Check if data needs to be processed by lng running job */ true) {
+                    // For lng-running tasks (10 seconds or more) use Firebase Job Dispatcher.
                     //scheduleJob();
                 } else {
                     // Handle message within 10 seconds

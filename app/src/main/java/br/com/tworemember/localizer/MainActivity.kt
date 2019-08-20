@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import br.com.tworemember.localizer.model.User
 import com.facebook.AccessToken
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
@@ -148,12 +149,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         signIn()
     }
 
-    private fun updateDb(user: FirebaseUser){
-        val users = db.getReference("/users")
-        user.email?.let {
-            val email64 = it.toBase64()
-            users.child(email64).setValue(user)
-            goToHome()
+    private fun updateDb(firebaseUser: FirebaseUser){
+        val users = db.reference.child("users")
+        firebaseUser.email?.let {
+            val key = it.toBase64()
+            val user = User(key, firebaseUser.displayName, it)
+            users.child(key).setValue(user)
         }
     }
 

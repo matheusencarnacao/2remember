@@ -8,7 +8,7 @@ class FirebaseMessageService : FirebaseMessagingService() {
 
     private val tag = "FirebaseMessageService"
 
-    override fun onMessageReceived(remoteMessage: RemoteMessage?) {
+    override fun onMessageReceived(remoteMessage: RemoteMessage) {
         remoteMessage?.let {
 
             // Not getting messages here? See why this may be: https://goo.gl/39bRNJ
@@ -38,7 +38,7 @@ class FirebaseMessageService : FirebaseMessagingService() {
         }
     }
 
-    override fun onNewToken(token: String?) {
+    override fun onNewToken(token: String) {
         Log.d(tag, "Refreshed token: $token");
 
         // If you want to send messages to this application instance or

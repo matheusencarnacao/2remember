@@ -63,6 +63,8 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".BluetoothListActivity" android:label="Bluetooth"/>
+
         <meta-data
                 android:name="com.facebook.sdk.ApplicationId"
                 android:value="@string/facebook_app_id"/>

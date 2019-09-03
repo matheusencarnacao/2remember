@@ -20,13 +20,22 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.android.synthetic.main.activity_maps.*
+import android.R.attr.data
+import android.util.Log
+import org.json.JSONException
+import org.json.JSONObject
+import com.google.zxing.integration.android.IntentResult
+
+
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var locationManager: LocationManager
+    private val qrScan = IntentIntegrator(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,58 +45,97 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        btn_bluetooth.setOnClickListener { startActivity(Intent(this@MapsActivity, BluetoothListActivity::class.java)) }
+        btn_bluetooth.setOnClickListener {
+            startActivity(
+                Intent(
+                    this@MapsActivity,
+                    BluetoothListActivity::class.java
+                )
+            )
+        }
+
+        qr_scanner.setOnClickListener { qrScan.initiateScan() }
     }
 
-    private fun checkPermission(permission: String) : Boolean{
-        return ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED
+    private fun checkPermission(permission: String): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            permission
+        ) != PackageManager.PERMISSION_GRANTED
     }
 
-    private fun getLocation(){
+    private fun getLocation() {
         if (checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION) ||
-            checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
+            checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+        ) {
             askPermission()
             return
         }
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 5f, locationListener)
+        locationManager.requestLocationUpdates(
+            LocationManager.GPS_PROVIDER,
+            5000,
+            5f,
+            locationListener
+        )
     }
 
     @SuppressLint("MissingPermission")
-    private fun getLastLocation(){
+    private fun getLastLocation() {
         val criteria = Criteria()
         val bestProvider = locationManager.getBestProvider(criteria, false)
         val location = locationManager.getLastKnownLocation(bestProvider)
         setLocationInMap(location)
     }
 
-    private fun setLocationInMap(location: Location){
-        val lat = try{ location.latitude } catch (e: NullPointerException) { -1.0 }
-        val lon = try { location.longitude } catch (e: NullPointerException) { -1.0 }
+    private fun setLocationInMap(location: Location) {
+        val lat = try {
+            location.latitude
+        } catch (e: NullPointerException) {
+            -1.0
+        }
+        val lon = try {
+            location.longitude
+        } catch (e: NullPointerException) {
+            -1.0
+        }
         val myLocation = LatLng(lat, lon)
         mMap.clear()
         mMap.addMarker(MarkerOptions().position(myLocation).title("You are here!"))
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 15f))
     }
 
-    private fun askPermission(){
-        ActivityCompat.requestPermissions(this,
-            arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION),
-            100)
+    private fun askPermission() {
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ),
+            100
+        )
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        if (requestCode == 100){
-            if(grantResults[0] == PackageManager.PERMISSION_GRANTED)
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        if (requestCode == 100) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
                 getLocation()
             else
-                Toast.makeText(this, getString(R.string.msg_location_required), Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    getString(R.string.msg_location_required),
+                    Toast.LENGTH_SHORT
+                ).show()
         }
     }
 
-    private val locationListener = object: LocationListener {
+    private val locationListener = object : LocationListener {
         override fun onLocationChanged(location: Location?) {
-            if(location != null)
+            if (location != null)
                 setLocationInMap(location)
             else
                 getLastLocation()
@@ -98,7 +146,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         override fun onProviderEnabled(provider: String?) {}
 
         override fun onProviderDisabled(provider: String?) {
-            Toast.makeText(this@MapsActivity, "O recurso de GPS está desabilitado neste aparelho", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this@MapsActivity,
+                "O recurso de GPS está desabilitado neste aparelho",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -115,5 +167,25 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap = googleMap
 
         getLocation()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
+        if (result != null) {
+            if (result.contents == null) {
+                Toast.makeText(this, "Result Not Found", Toast.LENGTH_LONG).show()
+            } else {
+                try {
+                    val obj = JSONObject(result.contents)
+                    Log.d("QRCOde",obj.toString())
+                } catch (e: JSONException) {
+                    e.printStackTrace()
+                    Toast.makeText(this, result.contents, Toast.LENGTH_LONG).show()
+                }
+
+            }
+        } else {
+            super.onActivityResult(requestCode, resultCode, data)
+        }
     }
 }

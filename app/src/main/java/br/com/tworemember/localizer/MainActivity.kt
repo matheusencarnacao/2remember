@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import br.com.tworemember.localizer.model.User
 import com.facebook.AccessToken
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
@@ -22,7 +21,6 @@ import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.database.FirebaseDatabase
 import kotlinx.android.synthetic.main.activity_main.*
 
 
@@ -30,7 +28,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     private val callbackManager = CallbackManager.Factory.create()
     private lateinit var auth: FirebaseAuth
-    private lateinit var db: FirebaseDatabase
+    private val userDAO = UserDAO()
     private lateinit var googleSignInClient: GoogleSignInClient
     private val RC_SIGN_IN = 2000
 
@@ -40,7 +38,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         // Initialize Firebase Auth
         auth = FirebaseAuth.getInstance()
-        db = FirebaseDatabase.getInstance()
 
         setContentView(R.layout.activity_main)
 
@@ -94,7 +91,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     // Sign in success, update UI with the signed-in user's information
                     Log.d("MainActivity", "signInWithCredential:success")
                     val user = auth.currentUser
-                    user?.let { updateDb(it) }
+                    user?.let { saveUser(it) }
                 } else {
                     // If sign in fails, display a message to the user.
                     Log.w("MainActivity", "signInWithCredential:failure", task.exception)
@@ -135,7 +132,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                     // Sign in success, update UI with the signed-in user's information
                     Log.d("MainActivity", "signInWithCredential:success")
                     val user = auth.currentUser
-                    user?.let{ updateDb(it)}
+                    user?.let{ saveUser(it) }
                 } else {
                     // If sign in fails, display a message to the user.
                     Log.w("MainActivity", "signInWithCredential:failure", task.exception)
@@ -145,18 +142,19 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
     }
 
-    override fun onClick(v: View?) {
-        signIn()
+    fun saveUser(currentUser: FirebaseUser){
+        val user = userDAO.updateDb(currentUser)
+        if(user == null){
+            auth.signOut()
+            Toast.makeText(this, "Erro ao cadastrar cliente", Toast.LENGTH_SHORT).show()
+            return
+        }
+        Preferences(this).setUser(user)
+        goToHome()
     }
 
-    private fun updateDb(firebaseUser: FirebaseUser){
-        val users = db.reference.child("users")
-        firebaseUser.email?.let {
-            val key = it.toBase64()
-            val user = User(key, firebaseUser.displayName, it)
-            users.child(key).setValue(user)
-        }
-    }
+    override fun onClick(v: View?) { signIn() }
+
 
     private val facebookCallback = object : FacebookCallback<LoginResult> {
         override fun onSuccess(loginResult: LoginResult) {

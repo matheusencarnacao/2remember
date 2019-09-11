@@ -24,6 +24,7 @@ import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.android.synthetic.main.activity_maps.*
 import android.R.attr.data
 import android.util.Log
+import com.google.firebase.functions.FirebaseFunctions
 import org.json.JSONException
 import org.json.JSONObject
 import com.google.zxing.integration.android.IntentResult
@@ -36,6 +37,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var mMap: GoogleMap
     private lateinit var locationManager: LocationManager
     private val qrScan = IntentIntegrator(this)
+    private val functions = FirebaseFunctions.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -176,8 +178,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 Toast.makeText(this, "Result Not Found", Toast.LENGTH_LONG).show()
             } else {
                 try {
-                    val obj = JSONObject(result.contents)
-                    Log.d("QRCOde",obj.toString())
+                    val macaddress = result.contents
+
                 } catch (e: JSONException) {
                     e.printStackTrace()
                     Toast.makeText(this, result.contents, Toast.LENGTH_LONG).show()
@@ -187,5 +189,24 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         } else {
             super.onActivityResult(requestCode, resultCode, data)
         }
+    }
+
+    fun registerDevice(macAddress: String) {
+        val user = Preferences(this).getUser()
+        if (user == null){
+            Toast.makeText(this, "Usuário não encontrado, refaça o login por favor", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val req = RegisterRequest(user.uuid, macAddress)
+
+        functions.getHttpsCallable("newRegister")
+            .call(req)
+            .addOnCompleteListener {
+                if (!it.isSuccessful){
+                    Toast.makeText(this, "Erro ao vincular dispositivo", Toast.LENGTH_SHORT).show()
+                }
+                //TODO: terminar logica de registro
+            }
     }
 }

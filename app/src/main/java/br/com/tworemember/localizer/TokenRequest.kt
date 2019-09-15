@@ -2,7 +2,7 @@ package br.com.tworemember.localizer
 
 import java.io.Serializable
 
-data class RegisterRequest(
+data class TokenRequest (
     val userId: String,
-    val macaddress: String
+    val token: String
 ) : Serializable

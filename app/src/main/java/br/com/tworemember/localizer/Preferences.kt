@@ -26,4 +26,12 @@ class Preferences(context: Context) {
 
     }
 
+    fun setMacAddress(macaddress: String){
+        sharedPrefences.edit().putString("MacAddress", macaddress).apply()
+    }
+
+    fun getMacAddress(): String? {
+        return sharedPrefences.getString("MacAddress", "")
+    }
+
 }

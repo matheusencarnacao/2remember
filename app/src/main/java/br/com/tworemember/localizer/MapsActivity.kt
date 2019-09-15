@@ -2,6 +2,7 @@ package br.com.tworemember.localizer
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -10,6 +11,7 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -20,16 +22,10 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.firebase.functions.FirebaseFunctions
 import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.android.synthetic.main.activity_maps.*
-import android.R.attr.data
-import android.util.Log
-import com.google.firebase.functions.FirebaseFunctions
 import org.json.JSONException
-import org.json.JSONObject
-import com.google.zxing.integration.android.IntentResult
-
-
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -38,6 +34,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var locationManager: LocationManager
     private val qrScan = IntentIntegrator(this)
     private val functions = FirebaseFunctions.getInstance()
+    private var loading: ProgressDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -159,11 +156,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
+     * This is where we can add markers or lines, add listeners or move the camera.
      */
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
@@ -179,7 +172,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             } else {
                 try {
                     val macaddress = result.contents
-
+                    registerDevice(macaddress)
                 } catch (e: JSONException) {
                     e.printStackTrace()
                     Toast.makeText(this, result.contents, Toast.LENGTH_LONG).show()
@@ -192,21 +185,54 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     fun registerDevice(macAddress: String) {
+        loading = createLoading()
         val user = Preferences(this).getUser()
         if (user == null){
+            loading?.dismiss()
             Toast.makeText(this, "Usuário não encontrado, refaça o login por favor", Toast.LENGTH_SHORT).show()
             return
         }
 
         val req = RegisterRequest(user.uuid, macAddress)
+        callRegisterFunction(req)
+    }
 
+    fun createLoading() : ProgressDialog {
+        val dialog = ProgressDialogProvider.showProgressDialog(this, "Vinculando dispositivo...")
+        return dialog
+    }
+
+    fun callRegisterFunction(req: RegisterRequest){
         functions.getHttpsCallable("newRegister")
             .call(req)
             .addOnCompleteListener {
                 if (!it.isSuccessful){
                     Toast.makeText(this, "Erro ao vincular dispositivo", Toast.LENGTH_SHORT).show()
+                    loading?.dismiss()
+                    return@addOnCompleteListener
                 }
-                //TODO: terminar logica de registro
+
+                Toast.makeText(this, "Dispositivo vinculado com sucesso!", Toast.LENGTH_SHORT).show()
+                Preferences(this).setMacAddress(req.macaddress)
+                callLastLocationFunction(req.macaddress)
+            }
+    }
+
+    fun callLastLocationFunction(macAddress: String){
+        val currentPositionRequest = CurrentPositionRequest(macAddress)
+
+        functions.getHttpsCallable("lastPosition")
+            .call(currentPositionRequest)
+            .addOnCompleteListener {
+                if(!it.isSuccessful){
+                    Toast.makeText(this, "Erro ao carregar localização do dispositivo",
+                        Toast.LENGTH_SHORT).show()
+                    loading?.dismiss()
+                    return@addOnCompleteListener
+                }
+
+                Toast.makeText(this, "LOcalização atualizada", Toast.LENGTH_SHORT).show()
+                Log.d("Position", it.result?.data.toString())
             }
     }
 }

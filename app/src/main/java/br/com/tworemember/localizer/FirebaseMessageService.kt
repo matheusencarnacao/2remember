@@ -1,6 +1,8 @@
 package br.com.tworemember.localizer
 
 import android.util.Log
+import br.com.tworemember.localizer.model.User
+import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 
@@ -40,10 +42,23 @@ class FirebaseMessageService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         Log.d(tag, "Refreshed token: $token");
+        sendTokenToFunction(token)
+    }
 
-        // If you want to send messages to this application instance or
-        // manage this apps subscriptions on the server side, send the
-        // Instance ID token to your app server.
-        //sendRegistrationToServer(token);
+    private fun sendTokenToFunction(token: String){
+        val user = Preferences(this).getUser()
+        user?.let { callTokenFunction(token, it) }
+    }
+
+    private fun callTokenFunction(token: String, user: User){
+        val body = TokenRequest(user.uuid, token)
+        val functions = FirebaseFunctions.getInstance()
+        functions.getHttpsCallable("newToken")
+            .call(body)
+            .addOnCompleteListener {
+                if (it.isSuccessful){
+                    Log.d("Token", "Token registrado com sucesso")
+                }
+            }
     }
 }

@@ -11,7 +11,6 @@ class UserDAO {
         val users = db.reference.child("users")
         firebaseUser.email?.let {
             val key = it.toBase64()
-            // TODO: verificar se o usuário existe
             val user = User(key, firebaseUser.displayName, it)
             users.child(key).setValue(user)
 

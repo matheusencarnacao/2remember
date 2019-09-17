@@ -1,3 +1,5 @@
+@file:Suppress("DEPRECATION")
+
 package br.com.tworemember.localizer
 
 import android.Manifest
@@ -23,6 +25,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.functions.FirebaseFunctions
+import com.google.gson.Gson
 import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.android.synthetic.main.activity_maps.*
 import org.json.JSONException
@@ -44,14 +47,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        btn_bluetooth.setOnClickListener {
-            startActivity(
-                Intent(
-                    this@MapsActivity,
-                    BluetoothListActivity::class.java
-                )
-            )
-        }
+        btn_bluetooth.setOnClickListener { startActivity(
+            Intent(this@MapsActivity, BluetoothListActivity::class.java )
+        ) }
 
         qr_scanner.setOnClickListener { qrScan.initiateScan() }
     }
@@ -203,8 +201,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     fun callRegisterFunction(req: RegisterRequest){
+        val body = Gson().toJson(req)
+
         functions.getHttpsCallable("newRegister")
-            .call(req)
+            .call(body)
             .addOnCompleteListener {
                 if (!it.isSuccessful){
                     Toast.makeText(this, "Erro ao vincular dispositivo", Toast.LENGTH_SHORT).show()

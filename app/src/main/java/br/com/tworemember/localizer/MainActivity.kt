@@ -1,5 +1,8 @@
+@file:Suppress("DEPRECATION")
+
 package br.com.tworemember.localizer
 
+import android.app.ProgressDialog
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -31,7 +34,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     private val userDAO = UserDAO()
     private lateinit var googleSignInClient: GoogleSignInClient
     private val RC_SIGN_IN = 2000
-
+    private var dialog : ProgressDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -69,15 +72,16 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
         super.onStart()
 
         val currentUser = auth.currentUser
-        if (currentUser != null)
+        if (currentUser != null){
+            iniciarDialog()
             goToHome()
+        }
     }
 
     private fun goToHome(){
-        val dialog = ProgressDialogProvider.showProgressDialog(this, "Realizando login...")
         val intent = Intent(this, MapsActivity::class.java)
         startActivity(intent)
-        dialog.dismiss()
+        dialog?.dismiss()
         finish()
     }
 
@@ -95,9 +99,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 } else {
                     // If sign in fails, display a message to the user.
                     Log.w("MainActivity", "signInWithCredential:failure", task.exception)
-                    Toast.makeText(baseContext, "Authentication failed.",
+                    Toast.makeText(baseContext, "Erro ao autenticar com o Facebook.",
                         Toast.LENGTH_SHORT).show()
-                    //updateUI(null)
                 }
             }
     }
@@ -142,7 +145,12 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
             }
     }
 
+    private fun iniciarDialog(){
+        dialog = ProgressDialogProvider.showProgressDialog(this, "Realizando login...")
+    }
+
     fun saveUser(currentUser: FirebaseUser){
+        iniciarDialog()
         val user = userDAO.updateDb(currentUser)
         if(user == null){
             auth.signOut()

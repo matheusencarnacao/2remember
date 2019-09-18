@@ -5,6 +5,9 @@ import br.com.tworemember.localizer.model.User
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class FirebaseMessageService : FirebaseMessagingService() {
 
@@ -51,14 +54,20 @@ class FirebaseMessageService : FirebaseMessagingService() {
     }
 
     private fun callTokenFunction(token: String, user: User){
+        val functions = RetrofitClient.getInstance().create(Functions::class.java)
         val body = TokenRequest(user.uuid, token)
-        val functions = FirebaseFunctions.getInstance()
-        functions.getHttpsCallable("newToken")
-            .call(body)
-            .addOnCompleteListener {
-                if (it.isSuccessful){
-                    Log.d("Token", "Token registrado com sucesso")
-                }
+
+        val tokenCall = functions.newToken(body)
+        tokenCall.enqueue(object: Callback<Void> {
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                Log.e("Token: ", "Erro ao enviar o token: E: ${t.message}")
             }
+
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                Log.d("Token: ", "token enviado com sucesso!")
+            }
+
+        })
+
     }
 }

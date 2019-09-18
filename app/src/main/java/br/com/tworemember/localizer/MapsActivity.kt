@@ -29,6 +29,9 @@ import com.google.gson.Gson
 import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.android.synthetic.main.activity_maps.*
 import org.json.JSONException
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -201,38 +204,43 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     fun callRegisterFunction(req: RegisterRequest){
-        val body = Gson().toJson(req)
 
-        functions.getHttpsCallable("newRegister")
-            .call(body)
-            .addOnCompleteListener {
-                if (!it.isSuccessful){
-                    Toast.makeText(this, "Erro ao vincular dispositivo", Toast.LENGTH_SHORT).show()
-                    loading?.dismiss()
-                    return@addOnCompleteListener
-                }
+        val functions = RetrofitClient.getInstance().create(Functions::class.java)
+        val registerCall = functions.newRegister(req)
 
-                Toast.makeText(this, "Dispositivo vinculado com sucesso!", Toast.LENGTH_SHORT).show()
-                Preferences(this).setMacAddress(req.macaddress)
+        registerCall.enqueue(object: Callback<Void> {
+            override fun onFailure(call: Call<Void>, t: Throwable) {
+                Toast.makeText(this@MapsActivity, "Erro ao vincular dispositivo", Toast.LENGTH_SHORT).show()
+                loading?.dismiss()
+            }
+            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                Toast.makeText(this@MapsActivity, "Dispositivo vinculado com sucesso!", Toast.LENGTH_SHORT).show()
+                Preferences(this@MapsActivity).setMacAddress(req.macaddress)
                 callLastLocationFunction(req.macaddress)
             }
+        })
     }
 
     fun callLastLocationFunction(macAddress: String){
+        val functions = RetrofitClient.getInstance().create(Functions::class.java)
         val currentPositionRequest = CurrentPositionRequest(macAddress)
+        val positionCall = functions.lastLocation(currentPositionRequest)
 
-        functions.getHttpsCallable("lastPosition")
-            .call(currentPositionRequest)
-            .addOnCompleteListener {
-                if(!it.isSuccessful){
-                    Toast.makeText(this, "Erro ao carregar localização do dispositivo",
-                        Toast.LENGTH_SHORT).show()
-                    loading?.dismiss()
-                    return@addOnCompleteListener
-                }
-
-                Toast.makeText(this, "LOcalização atualizada", Toast.LENGTH_SHORT).show()
-                Log.d("Position", it.result?.data.toString())
+        positionCall.enqueue(object: Callback<CurrentPositionResponse> {
+            override fun onFailure(call: Call<CurrentPositionResponse>, t: Throwable) {
+                Toast.makeText(this@MapsActivity, "Erro ao carregar localização do dispositivo",
+                    Toast.LENGTH_SHORT).show()
+                loading?.dismiss()
             }
+
+            override fun onResponse(
+                call: Call<CurrentPositionResponse>,
+                response: Response<CurrentPositionResponse>
+            ) {
+                Toast.makeText(this@MapsActivity, "LOcalização atualizada", Toast.LENGTH_SHORT).show()
+                Log.d("Position", response.body()?.toString())
+            }
+
+        })
     }
 }

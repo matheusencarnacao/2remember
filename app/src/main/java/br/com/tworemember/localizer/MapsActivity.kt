@@ -4,6 +4,7 @@ package br.com.tworemember.localizer
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
@@ -25,8 +26,6 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.functions.FirebaseFunctions
-import com.google.gson.Gson
-import com.google.zxing.integration.android.IntentIntegrator
 import kotlinx.android.synthetic.main.activity_maps.*
 import org.json.JSONException
 import retrofit2.Call
@@ -38,7 +37,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var locationManager: LocationManager
-    private val qrScan = IntentIntegrator(this)
     private val functions = FirebaseFunctions.getInstance()
     private var loading: ProgressDialog? = null
 
@@ -54,7 +52,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             Intent(this@MapsActivity, BluetoothListActivity::class.java )
         ) }
 
-        qr_scanner.setOnClickListener { qrScan.initiateScan() }
+        qr_scanner.setOnClickListener {
+            startActivityForResult(Intent(
+                this@MapsActivity, ScannerActivity::class.java), 4
+            )
+        }
     }
 
     private fun checkPermission(permission: String): Boolean {
@@ -166,19 +168,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
-        if (result != null) {
-            if (result.contents == null) {
-                Toast.makeText(this, "Result Not Found", Toast.LENGTH_LONG).show()
+        if (requestCode == 4 && resultCode == Activity.RESULT_OK){
+            if (data == null) {
+                Toast.makeText(this, "Erro ao ler QR Code.", Toast.LENGTH_LONG).show()
             } else {
-                try {
-                    val macaddress = result.contents
-                    registerDevice(macaddress)
-                } catch (e: JSONException) {
-                    e.printStackTrace()
-                    Toast.makeText(this, result.contents, Toast.LENGTH_LONG).show()
-                }
-
+                //TODO:Verificar se o macaddress é valido.
+                val macaddress = data.getStringExtra("value")
+                registerDevice(macaddress)
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data)

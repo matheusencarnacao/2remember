@@ -1,4 +1,4 @@
-package br.com.tworemember.localizer
+package br.com.tworemember.localizer.extensions
 
 import android.util.Base64
 

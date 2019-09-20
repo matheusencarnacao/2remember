@@ -1,4 +1,4 @@
-package br.com.tworemember.localizer
+package br.com.tworemember.localizer.adapter
 
 import android.bluetooth.BluetoothDevice
 import android.content.Context
@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import br.com.tworemember.localizer.bluetooth.BluetoothDeviceDelegate
 
 class DeviceAdapter(
     private val context: Context,

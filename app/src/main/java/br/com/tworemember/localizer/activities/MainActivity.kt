@@ -1,6 +1,6 @@
 @file:Suppress("DEPRECATION")
 
-package br.com.tworemember.localizer
+package br.com.tworemember.localizer.activities
 
 import android.app.ProgressDialog
 import android.content.Intent
@@ -9,6 +9,10 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import br.com.tworemember.localizer.providers.Preferences
+import br.com.tworemember.localizer.providers.ProgressDialogProvider
+import br.com.tworemember.localizer.R
+import br.com.tworemember.localizer.DAO.UserDAO
 import com.facebook.AccessToken
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
@@ -51,6 +55,8 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         buttonFacebookLogin.setPermissions("email", "public_profile")
         buttonFacebookLogin.registerCallback(callbackManager, facebookCallback)
+
+        goToHome()
     }
 
     private fun configureGoogleClient(){
@@ -146,7 +152,10 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun iniciarDialog(){
-        dialog = ProgressDialogProvider.showProgressDialog(this, "Realizando login...")
+        dialog = ProgressDialogProvider.showProgressDialog(
+            this,
+            "Realizando login..."
+        )
     }
 
     fun saveUser(currentUser: FirebaseUser){

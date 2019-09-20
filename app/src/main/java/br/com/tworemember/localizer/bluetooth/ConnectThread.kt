@@ -1,10 +1,11 @@
-package br.com.tworemember.localizer
+package br.com.tworemember.localizer.bluetooth
 
 import android.app.Activity
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.util.Log
 import android.widget.Toast
+import br.com.tworemember.localizer.model.ConfiguracaoRaio
 import com.google.gson.Gson
 import java.io.IOException
 import java.util.*
@@ -12,7 +13,8 @@ import java.util.*
 
 class ConnectThread(
     private val context: Activity,
-    private val device: BluetoothDevice
+    device: BluetoothDevice,
+    private val delegate: ConnectionDelegate
 ) : Thread() {
 
     private var bluetoothSocker: BluetoothSocket? = null
@@ -39,19 +41,18 @@ class ConnectThread(
             // Connect the device through the socket. This will block
             // until it succeeds or throws an exception
             Log.d("Conectando", "conectando ao dispositivo")
+            context.runOnUiThread { delegate.onConnecting() }
             bluetoothSocker?.connect()
             Log.d("Conectado", "Conectado com sucesso")
         } catch (connectException: IOException) {
-            context.runOnUiThread {Toast.makeText(context, "Erro ao conectcar com o dispositivo", Toast.LENGTH_SHORT)
-                .show()}
+            context.runOnUiThread { delegate.onError("Erro ao conectcar com o dispositivo") }
 
             connectException.printStackTrace()
             // Unable to connect; close the socket and get out
             try {
                 bluetoothSocker?.close()
             } catch (closeException: IOException) {
-                context.runOnUiThread {Toast.makeText(context, "Erro ao fechar conexão com socket", Toast.LENGTH_SHORT)
-                    .show()}
+                context.runOnUiThread { delegate.onError("Erro ao fechar conexão com socket") }
                 closeException.printStackTrace()
             }
 
@@ -63,8 +64,12 @@ class ConnectThread(
     }
 
     private fun manageConnectedSocket(socket: BluetoothSocket) {
-        val connectedThread = ConnectedThread(context, socket)
-        val objectTest = ConfiguracaoRaio(-23.5467597, -46.7343132, 5)
+        context.runOnUiThread { delegate.onConnected() }
+        val connectedThread =
+            ConnectedThread(context, socket)
+        //TODO: pegar das preferencias
+        val objectTest =
+            ConfiguracaoRaio(-23.5467597, -46.7343132, 5)
         val gson = Gson()
         val bytes = gson.toJson(objectTest).toByteArray()
         connectedThread.write(bytes)
@@ -77,7 +82,7 @@ class ConnectThread(
             bluetoothSocker?.close()
         } catch (e: IOException) {
             e.printStackTrace()
-            context.runOnUiThread {Toast.makeText(context, "Erro ao fechar o socket", Toast.LENGTH_SHORT).show()}
+            context.runOnUiThread { Toast.makeText(context, "Erro ao fechar o socket", Toast.LENGTH_SHORT).show() }
         }
     }
 

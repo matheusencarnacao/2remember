@@ -1,4 +1,4 @@
-package br.com.tworemember.localizer
+package br.com.tworemember.localizer.providers
 
 import android.content.Context
 import android.content.SharedPreferences

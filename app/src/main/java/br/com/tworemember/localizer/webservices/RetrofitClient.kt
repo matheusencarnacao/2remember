@@ -1,4 +1,4 @@
-package br.com.tworemember.localizer
+package br.com.tworemember.localizer.webservices
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory

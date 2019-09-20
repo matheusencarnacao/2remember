@@ -1,6 +1,6 @@
 @file:Suppress("DEPRECATION")
 
-package br.com.tworemember.localizer
+package br.com.tworemember.localizer.activities
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -19,6 +19,14 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import br.com.tworemember.localizer.providers.Preferences
+import br.com.tworemember.localizer.providers.ProgressDialogProvider
+import br.com.tworemember.localizer.R
+import br.com.tworemember.localizer.webservices.Functions
+import br.com.tworemember.localizer.webservices.RetrofitClient
+import br.com.tworemember.localizer.webservices.model.CurrentPositionRequest
+import br.com.tworemember.localizer.webservices.model.CurrentPositionResponse
+import br.com.tworemember.localizer.webservices.model.RegisterRequest
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -27,7 +35,6 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.firebase.functions.FirebaseFunctions
 import kotlinx.android.synthetic.main.activity_maps.*
-import org.json.JSONException
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -190,12 +197,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             return
         }
 
-        val req = RegisterRequest(user.uuid, macAddress)
+        val req =
+            RegisterRequest(user.uuid, macAddress)
         callRegisterFunction(req)
     }
 
     fun createLoading() : ProgressDialog {
-        val dialog = ProgressDialogProvider.showProgressDialog(this, "Vinculando dispositivo...")
+        val dialog =
+            ProgressDialogProvider.showProgressDialog(
+                this,
+                "Vinculando dispositivo..."
+            )
         return dialog
     }
 
@@ -219,7 +231,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     fun callLastLocationFunction(macAddress: String){
         val functions = RetrofitClient.getInstance().create(Functions::class.java)
-        val currentPositionRequest = CurrentPositionRequest(macAddress)
+        val currentPositionRequest =
+            CurrentPositionRequest(macAddress)
         val positionCall = functions.lastLocation(currentPositionRequest)
 
         positionCall.enqueue(object: Callback<CurrentPositionResponse> {

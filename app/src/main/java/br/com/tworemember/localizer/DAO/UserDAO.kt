@@ -1,5 +1,6 @@
-package br.com.tworemember.localizer
+package br.com.tworemember.localizer.DAO
 
+import br.com.tworemember.localizer.extensions.toBase64
 import br.com.tworemember.localizer.model.User
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.FirebaseDatabase

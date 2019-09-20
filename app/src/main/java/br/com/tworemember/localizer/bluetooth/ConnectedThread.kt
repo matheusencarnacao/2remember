@@ -1,4 +1,4 @@
-package br.com.tworemember.localizer
+package br.com.tworemember.localizer.bluetooth
 
 import android.app.Activity
 import android.bluetooth.BluetoothSocket

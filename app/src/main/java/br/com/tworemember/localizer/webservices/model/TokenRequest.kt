@@ -1,4 +1,4 @@
-package br.com.tworemember.localizer
+package br.com.tworemember.localizer.webservices.model
 
 import java.io.Serializable
 

@@ -1,4 +1,4 @@
-package br.com.tworemember.localizer
+package br.com.tworemember.localizer.activities
 
 import android.app.Activity
 import android.content.Intent

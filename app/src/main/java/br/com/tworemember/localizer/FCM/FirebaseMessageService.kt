@@ -1,8 +1,11 @@
-package br.com.tworemember.localizer
+package br.com.tworemember.localizer.FCM
 
 import android.util.Log
+import br.com.tworemember.localizer.providers.Preferences
+import br.com.tworemember.localizer.webservices.model.TokenRequest
 import br.com.tworemember.localizer.model.User
-import com.google.firebase.functions.FirebaseFunctions
+import br.com.tworemember.localizer.webservices.Functions
+import br.com.tworemember.localizer.webservices.RetrofitClient
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import retrofit2.Call

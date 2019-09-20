@@ -1,4 +1,4 @@
-package br.com.tworemember.localizer
+package br.com.tworemember.localizer.model
 
 import com.google.gson.annotations.SerializedName
 import java.io.Serializable

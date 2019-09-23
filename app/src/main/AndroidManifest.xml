@@ -21,6 +21,7 @@
             android:required="true"/>
 
     <application
+            android:name=".aplication.MyApplication"
             android:allowBackup="false"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
@@ -47,7 +48,7 @@
         </activity>
 
         <service
-                android:name=".FCM.FirebaseMessageService"
+                android:name=".fcm.FirebaseMessageService"
                 android:enabled="true"
                 android:exported="true">
             <intent-filter>

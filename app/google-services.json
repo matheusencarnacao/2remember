@@ -15,19 +15,19 @@
       },
       "oauth_client": [
         {
-          "client_id": "325152889927-bru1lj5dau9mlgkvlo38vdj3josfqbmu.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "br.com.tworemember.localizer",
-            "certificate_hash": "cdcced7646b028a5a28b0df3fb88de8b35c3a09d"
-          }
-        },
-        {
-          "client_id": "325152889927-u7da8cjhgnsn0kideam51m0775dtp50v.apps.googleusercontent.com",
+          "client_id": "325152889927-8fg8tsc6ure8lfgfv899d3ocrbudcm3n.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "br.com.tworemember.localizer",
             "certificate_hash": "200cee8a3d11c19340998e8812ec6f0acca4d469"
+          }
+        },
+        {
+          "client_id": "325152889927-f877n0ik8jbjs1n2ov6e4d7od61o2ed2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.com.tworemember.localizer",
+            "certificate_hash": "cdcced7646b028a5a28b0df3fb88de8b35c3a09d"
           }
         },
         {

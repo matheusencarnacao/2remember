@@ -55,8 +55,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         buttonFacebookLogin.setPermissions("email", "public_profile")
         buttonFacebookLogin.registerCallback(callbackManager, facebookCallback)
-
-        goToHome()
     }
 
     private fun configureGoogleClient(){

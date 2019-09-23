@@ -10,7 +10,7 @@ import retrofit2.http.POST
 
 interface Functions {
 
-    @POST("/newResgiter")
+    @POST("/newRegister")
     fun newRegister(@Body req: RegisterRequest) : Call<Void>
 
     @POST("/newToken")

@@ -33,7 +33,6 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.firebase.functions.FirebaseFunctions
 import kotlinx.android.synthetic.main.activity_maps.*
 import retrofit2.Call
 import retrofit2.Callback
@@ -44,7 +43,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var locationManager: LocationManager
-    private val functions = FirebaseFunctions.getInstance()
     private var loading: ProgressDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,11 +57,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             Intent(this@MapsActivity, BluetoothListActivity::class.java )
         ) }
 
-        qr_scanner.setOnClickListener {
-            startActivityForResult(Intent(
-                this@MapsActivity, ScannerActivity::class.java), 4
-            )
-        }
+        qr_scanner.setOnClickListener { scanQrCode() }
     }
 
     private fun checkPermission(permission: String): Boolean {
@@ -73,11 +67,25 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         ) != PackageManager.PERMISSION_GRANTED
     }
 
+    private fun scanQrCode(){
+        if(checkPermission(Manifest.permission.CAMERA)){
+            askPermission(arrayOf(Manifest.permission.CAMERA))
+            return
+        }
+        startActivityForResult(Intent(
+            this@MapsActivity, ScannerActivity::class.java), 4
+        )
+
+    }
+
     private fun getLocation() {
         if (checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION) ||
             checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)
         ) {
-            askPermission()
+            askPermission(arrayOf(
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ))
             return
         }
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -114,15 +122,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 15f))
     }
 
-    private fun askPermission() {
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ),
-            100
-        )
+    private fun askPermission(permissions: Array<String>) {
+        ActivityCompat.requestPermissions(this, permissions, 100)
     }
 
     override fun onRequestPermissionsResult(
@@ -171,7 +172,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        getLocation()
+
+        val macAddress = Preferences(this).getMacAddress()
+        if(macAddress != null)
+            callLastLocationFunction(macAddress)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -197,8 +201,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             return
         }
 
-        val req =
-            RegisterRequest(user.uuid, macAddress)
+        val req = RegisterRequest(user.uuid, macAddress)
         callRegisterFunction(req)
     }
 
@@ -224,7 +227,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 Toast.makeText(this@MapsActivity, "Dispositivo vinculado com sucesso!", Toast.LENGTH_SHORT).show()
                 Preferences(this@MapsActivity).setMacAddress(req.macaddress)
-                callLastLocationFunction(req.macaddress)
+                    callLastLocationFunction(req.macaddress)
             }
         })
     }

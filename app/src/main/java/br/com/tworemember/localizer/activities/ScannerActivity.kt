@@ -8,7 +8,7 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.Result
 import me.dm7.barcodescanner.zxing.ZXingScannerView
 
-class ScannerActivity() : AppCompatActivity(), ZXingScannerView.ResultHandler {
+class ScannerActivity() : Activity(), ZXingScannerView.ResultHandler {
 
     private var scannerView: ZXingScannerView? = null
 
@@ -25,6 +25,7 @@ class ScannerActivity() : AppCompatActivity(), ZXingScannerView.ResultHandler {
         val intent = Intent()
         intent.putExtras(bundle)
         setResult(Activity.RESULT_OK, intent)
+        finish()
     }
 
     override fun onResume() {

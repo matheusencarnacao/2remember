@@ -16,6 +16,6 @@ interface Functions {
     @POST("/newToken")
     fun newToken(@Body token: TokenRequest) : Call<Void>
 
-    @POST("/lastLocation")
-    fun lastLocation(@Body positionRequest: CurrentPositionRequest) : Call<CurrentPositionResponse>
+    @POST("/lastPosition")
+    fun lastPosition(@Body positionRequest: CurrentPositionRequest) : Call<CurrentPositionResponse>
 }

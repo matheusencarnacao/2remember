@@ -4,4 +4,6 @@
     <string name="fb_login_protocol_scheme">fb453419798534653</string>
     <string name="title_activity_maps">Map</string>
     <string name="msg_location_required">It\'s necessary the location to find your old person</string>
+    <string name="msg_camera_required">È necessário a permissão da câmera para poder scaner o QR Code</string>
+    <string name="msg_macaddress_bluetooth_null">Houve um erro ao conectar com o dispositivo, por favor escaneie o código novamente</string>
 </resources>

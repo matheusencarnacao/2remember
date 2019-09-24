@@ -17,6 +17,7 @@ import br.com.tworemember.localizer.adapter.DeviceAdapter
 import br.com.tworemember.localizer.bluetooth.BluetoothDeviceDelegate
 import br.com.tworemember.localizer.bluetooth.ConnectThread
 import br.com.tworemember.localizer.bluetooth.ConnectionDelegate
+import br.com.tworemember.localizer.providers.Preferences
 import br.com.tworemember.localizer.providers.ProgressDialogProvider
 import kotlinx.android.synthetic.main.activity_bluetooth_list.*
 
@@ -58,18 +59,29 @@ class BluetoothListActivity : AppCompatActivity(),
     }
 
     private fun verifyBluetoothEnabled() {
-        if (btnAdapter!!.isEnabled()) {
-            startDiscovery()
+        if (btnAdapter!!.isEnabled) {
+            connectToBondedDevice()
             return
         }
         val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
         startActivityForResult(enableBtIntent, request_enable_bt)
     }
 
-    private fun startDiscovery() {
+    private fun connectToBondedDevice(){
+        val macAddress = Preferences(this).getMacAddress()
+        if(macAddress == null){
+            Toast.makeText(this, getString(R.string.msg_macaddress_bluetooth_null), Toast.LENGTH_SHORT).show()
+            finish()
+            return
+        }
+        startDiscovery(macAddress)
+    }
+
+    private fun startDiscovery(macAddress:String) {
         btnAdapter!!.startDiscovery()
         // Register the BroadcastReceiver
         val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+        receiver.macAddress = macAddress
         registerReceiver(receiver, filter) // Don't forget to unregister during onDestroy
     }
 
@@ -80,7 +92,7 @@ class BluetoothListActivity : AppCompatActivity(),
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == request_enable_bt) {
             if (resultCode == Activity.RESULT_OK)
-                startDiscovery()
+                connectToBondedDevice()
             else {
                 Toast.makeText(
                     this,
@@ -93,6 +105,9 @@ class BluetoothListActivity : AppCompatActivity(),
     }
 
     private val receiver = object : BroadcastReceiver() {
+
+        var macAddress: String? = null
+
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent != null) {
                 val action = intent.action
@@ -102,9 +117,11 @@ class BluetoothListActivity : AppCompatActivity(),
                     val device =
                         intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
                     // Add the name and address to an array adapter to show in a ListView
-                    if (!verifyIfExists(device)) {
-                        devices.add(device)
-                        rv_devices.adapter?.notifyDataSetChanged()
+                    macAddress?.let {
+                        if (verifyDeviceMacAddress(device, it) && !verifyIfExists(device)) {
+                            devices.add(device)
+                            rv_devices.adapter?.notifyDataSetChanged()
+                        }
                     }
                 }
             }
@@ -113,6 +130,10 @@ class BluetoothListActivity : AppCompatActivity(),
 
     private fun verifyIfExists(device: BluetoothDevice): Boolean {
         return devices.any { it.address == device.address }
+    }
+
+    private fun verifyDeviceMacAddress(device: BluetoothDevice, macAddress: String) : Boolean{
+        return device.address == macAddress
     }
 
     override fun connect(device: BluetoothDevice) {

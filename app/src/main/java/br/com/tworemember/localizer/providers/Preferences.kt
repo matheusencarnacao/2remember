@@ -2,8 +2,9 @@ package br.com.tworemember.localizer.providers
 
 import android.content.Context
 import android.content.SharedPreferences
+import br.com.tworemember.localizer.model.Position
 import br.com.tworemember.localizer.model.User
-import com.google.gson.Gson
+import br.com.tworemember.localizer.webservices.model.CurrentPositionResponse
 
 class Preferences(context: Context) {
 
@@ -11,19 +12,13 @@ class Preferences(context: Context) {
         .getSharedPreferences("2remember-prefs", Context.MODE_PRIVATE)
 
     fun setUser(user: User){
-        val gson = Gson()
-        val userJson = gson.toJson(user)
+        val userJson = GsonConverter.getJson(user)
         sharedPrefences.edit().putString("User", userJson).apply()
     }
 
     fun getUser() : User?{
-        val userJson = sharedPrefences.getString("User", null)
-        if (userJson == null)
-            return userJson
-
-        val gson = Gson()
-        return gson.fromJson<User>(userJson, User::class.java)
-
+        val userJson = sharedPrefences.getString("User", null) ?: return null
+        return GsonConverter.fromJson(userJson, User::class.java) as User?
     }
 
     fun setMacAddress(macaddress: String){
@@ -31,7 +26,34 @@ class Preferences(context: Context) {
     }
 
     fun getMacAddress(): String? {
-        return sharedPrefences.getString("MacAddress", "")
+        return sharedPrefences.getString("MacAddress", null)
     }
 
+    fun setLastPosition(position: CurrentPositionResponse){
+        val posJson = GsonConverter.getJson(position)
+        sharedPrefences.edit().putString("LastPosition", posJson).apply()
+    }
+
+    fun getLastPosition(): CurrentPositionResponse? {
+        val posJson = sharedPrefences.getString("LastPosition", null) ?: return null
+        return GsonConverter.fromJson(posJson, CurrentPositionResponse::class.java) as CurrentPositionResponse?
+    }
+
+    fun setSafePosition(position: Position){
+        val posJson = GsonConverter.getJson(position)
+        sharedPrefences.edit().putString("SafePosition", posJson).apply()
+    }
+
+    fun getSafePosition() : Position? {
+        val posJson = sharedPrefences.getString("SafePosition", null) ?: return null
+        return GsonConverter.fromJson(posJson, Position::class.java) as Position?
+    }
+
+    fun setRaio(raio: Int){
+        sharedPrefences.edit().putInt("Raio", raio).apply()
+    }
+
+    fun getRaio() : Int{
+        return sharedPrefences.getInt("Raio", 0)
+    }
 }

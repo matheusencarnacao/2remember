@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothSocket
 import android.util.Log
 import android.widget.Toast
 import br.com.tworemember.localizer.model.ConfiguracaoRaio
+import br.com.tworemember.localizer.providers.Preferences
 import com.google.gson.Gson
 import java.io.IOException
 import java.util.*
@@ -68,11 +69,16 @@ class ConnectThread(
         val connectedThread =
             ConnectedThread(context, socket)
         //TODO: pegar das preferencias
-        val objectTest =
-            ConfiguracaoRaio(-23.5467597, -46.7343132, 5)
-        val gson = Gson()
-        val bytes = gson.toJson(objectTest).toByteArray()
-        connectedThread.write(bytes)
+
+        val prefs = Preferences(context)
+
+        val safePosition = prefs.getSafePosition()
+        safePosition?.let {
+            val conf = ConfiguracaoRaio(it.lat, it.lng, prefs.getRaio())
+            val gson = Gson()
+            val bytes = gson.toJson(conf).toByteArray()
+            connectedThread.write(bytes)
+        }
     }
 
 

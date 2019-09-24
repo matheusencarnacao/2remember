@@ -53,11 +53,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        btn_bluetooth.setOnClickListener { startActivity(
-            Intent(this@MapsActivity, BluetoothListActivity::class.java )
-        ) }
+        btn_bluetooth.setOnClickListener {
+            startActivity(
+                Intent(this@MapsActivity, BluetoothListActivity::class.java)
+            )
+        }
 
         qr_scanner.setOnClickListener { scanQrCode() }
+
+        //TODO: iniciar serviço que irá realizar requisição.
     }
 
     private fun checkPermission(permission: String): Boolean {
@@ -67,13 +71,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         ) != PackageManager.PERMISSION_GRANTED
     }
 
-    private fun scanQrCode(){
-        if(checkPermission(Manifest.permission.CAMERA)){
+    private fun scanQrCode() {
+        if (checkPermission(Manifest.permission.CAMERA)) {
             askPermission(arrayOf(Manifest.permission.CAMERA))
             return
         }
-        startActivityForResult(Intent(
-            this@MapsActivity, ScannerActivity::class.java), 4
+        startActivityForResult(
+            Intent(
+                this@MapsActivity, ScannerActivity::class.java
+            ), 4
         )
 
     }
@@ -82,10 +88,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         if (checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION) ||
             checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)
         ) {
-            askPermission(arrayOf(
-                Manifest.permission.ACCESS_COARSE_LOCATION,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ))
+            askPermission(
+                arrayOf(
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            )
             return
         }
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
@@ -102,23 +110,27 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val criteria = Criteria()
         val bestProvider = locationManager.getBestProvider(criteria, false)
         val location = locationManager.getLastKnownLocation(bestProvider)
-        setLocationInMap(location)
+        setLocationInMap(getLatLntFromLocation(location))
     }
 
-    private fun setLocationInMap(location: Location) {
+    private fun getLatLntFromLocation(location: Location) : LatLng{
         val lat = try {
             location.latitude
         } catch (e: NullPointerException) {
             -1.0
         }
-        val lon = try {
+        val lng = try {
             location.longitude
         } catch (e: NullPointerException) {
             -1.0
         }
-        val myLocation = LatLng(lat, lon)
+
+        return LatLng(lat, lng)
+    }
+
+    private fun setLocationInMap(myLocation: LatLng) {
         mMap.clear()
-        mMap.addMarker(MarkerOptions().position(myLocation).title("You are here!"))
+        mMap.addMarker(MarkerOptions().position(myLocation).title("Device is here!"))
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 15f))
     }
 
@@ -132,21 +144,32 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         grantResults: IntArray
     ) {
         if (requestCode == 100) {
-            if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                getLocation()
-            else
-                Toast.makeText(
-                    this,
-                    getString(R.string.msg_location_required),
-                    Toast.LENGTH_SHORT
-                ).show()
+            if (permissions[0] == Manifest.permission.CAMERA) {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    scanQrCode()
+                else
+                    Toast.makeText(
+                        this,
+                        getString(R.string.msg_camera_required),
+                        Toast.LENGTH_SHORT
+                    ).show()
+            } else {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    getLocation()
+                else
+                    Toast.makeText(
+                        this,
+                        getString(R.string.msg_location_required),
+                        Toast.LENGTH_SHORT
+                    ).show()
+            }
         }
     }
 
     private val locationListener = object : LocationListener {
         override fun onLocationChanged(location: Location?) {
             if (location != null)
-                setLocationInMap(location)
+                setLocationInMap(getLatLntFromLocation(location))
             else
                 getLastLocation()
         }
@@ -174,12 +197,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
         val macAddress = Preferences(this).getMacAddress()
-        if(macAddress != null)
-            callLastLocationFunction(macAddress)
+        if (macAddress != null)
+            callLastPositionFunction(macAddress)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == 4 && resultCode == Activity.RESULT_OK){
+        if (requestCode == 4 && resultCode == Activity.RESULT_OK) {
             if (data == null) {
                 Toast.makeText(this, "Erro ao ler QR Code.", Toast.LENGTH_LONG).show()
             } else {
@@ -193,11 +216,15 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     fun registerDevice(macAddress: String) {
-        loading = createLoading()
+        loading = createLoading("Vinculando dispositivo...")
         val user = Preferences(this).getUser()
-        if (user == null){
+        if (user == null) {
             loading?.dismiss()
-            Toast.makeText(this, "Usuário não encontrado, refaça o login por favor", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                "Usuário não encontrado, refaça o login por favor",
+                Toast.LENGTH_SHORT
+            ).show()
             return
         }
 
@@ -205,43 +232,56 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         callRegisterFunction(req)
     }
 
-    fun createLoading() : ProgressDialog {
+    fun createLoading(message:String): ProgressDialog {
         val dialog =
-            ProgressDialogProvider.showProgressDialog(
-                this,
-                "Vinculando dispositivo..."
-            )
+            ProgressDialogProvider.showProgressDialog(this, message)
         return dialog
     }
 
-    fun callRegisterFunction(req: RegisterRequest){
+    fun callRegisterFunction(req: RegisterRequest) {
 
         val functions = RetrofitClient.getInstance().create(Functions::class.java)
         val registerCall = functions.newRegister(req)
 
-        registerCall.enqueue(object: Callback<Void> {
+        registerCall.enqueue(object : Callback<Void> {
             override fun onFailure(call: Call<Void>, t: Throwable) {
-                Toast.makeText(this@MapsActivity, "Erro ao vincular dispositivo", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@MapsActivity,
+                    "Erro ao vincular dispositivo",
+                    Toast.LENGTH_SHORT
+                ).show()
                 loading?.dismiss()
             }
+
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
-                Toast.makeText(this@MapsActivity, "Dispositivo vinculado com sucesso!", Toast.LENGTH_SHORT).show()
-                Preferences(this@MapsActivity).setMacAddress(req.macaddress)
-                    callLastLocationFunction(req.macaddress)
+                if (response.isSuccessful){
+                    Toast.makeText(
+                        this@MapsActivity,
+                        "Dispositivo vinculado com sucesso!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    Preferences(this@MapsActivity).setMacAddress(req.macaddress)
+                    callLastPositionFunction(req.macaddress)
+                } else if (response.code() == 400){
+                    Toast.makeText(this@MapsActivity, "Houve um problema ao encontrar o dispositivo", Toast.LENGTH_SHORT).show()
+                }
             }
         })
     }
 
-    fun callLastLocationFunction(macAddress: String){
+    fun callLastPositionFunction(macAddress: String) {
+        loading?.dismiss()
+        loading = createLoading("Localizando dispositivo, aguarde...")
         val functions = RetrofitClient.getInstance().create(Functions::class.java)
-        val currentPositionRequest =
-            CurrentPositionRequest(macAddress)
-        val positionCall = functions.lastLocation(currentPositionRequest)
+        val currentPositionRequest = CurrentPositionRequest(macAddress)
+        val positionCall = functions.lastPosition(currentPositionRequest)
 
-        positionCall.enqueue(object: Callback<CurrentPositionResponse> {
+        positionCall.enqueue(object : Callback<CurrentPositionResponse> {
             override fun onFailure(call: Call<CurrentPositionResponse>, t: Throwable) {
-                Toast.makeText(this@MapsActivity, "Erro ao carregar localização do dispositivo",
-                    Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@MapsActivity, "Erro ao carregar localização do dispositivo",
+                    Toast.LENGTH_SHORT
+                ).show()
                 loading?.dismiss()
             }
 
@@ -249,8 +289,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 call: Call<CurrentPositionResponse>,
                 response: Response<CurrentPositionResponse>
             ) {
-                Toast.makeText(this@MapsActivity, "LOcalização atualizada", Toast.LENGTH_SHORT).show()
-                Log.d("Position", response.body()?.toString())
+                if (response.isSuccessful){
+                    Toast.makeText(this@MapsActivity, "LOcalização atualizada", Toast.LENGTH_SHORT)
+                        .show()
+                    Log.d("Position", response.body()?.toString())
+                    val position = response.body()
+                    position?.let { setLocationInMap(LatLng(it.lat, it.lng)) }
+                    loading?.dismiss()
+                } else {
+                    Toast.makeText(
+                        this@MapsActivity, "Erro ao carregar localização do dispositivo",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    loading?.dismiss()
+                }
+
             }
 
         })

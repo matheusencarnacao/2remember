@@ -1,6 +1,7 @@
 package br.com.tworemember.localizer.providers
 
 import com.google.gson.Gson
+import kotlin.reflect.KClass
 
 class GsonConverter {
 
@@ -10,9 +11,9 @@ class GsonConverter {
             return gson.toJson(obj)
         }
 
-        fun fromJson(json:String, kotlinClass: Class<*>) : Class<*>?{
+        fun fromJson(json:String, kotlinClass: KClass<*>) : Any? {
             val gson = Gson()
-            return gson.fromJson(json, kotlinClass::class.java)
+            return gson.fromJson(json, kotlinClass.java)
         }
     }
 }

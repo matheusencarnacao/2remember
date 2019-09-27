@@ -18,7 +18,7 @@ class Preferences(context: Context) {
 
     fun getUser() : User?{
         val userJson = sharedPrefences.getString("User", null) ?: return null
-        return GsonConverter.fromJson(userJson, User::class.java) as User?
+        return GsonConverter.fromJson(userJson, User::class) as User?
     }
 
     fun setMacAddress(macaddress: String){
@@ -36,7 +36,7 @@ class Preferences(context: Context) {
 
     fun getLastPosition(): CurrentPositionResponse? {
         val posJson = sharedPrefences.getString("LastPosition", null) ?: return null
-        return GsonConverter.fromJson(posJson, CurrentPositionResponse::class.java) as CurrentPositionResponse?
+        return GsonConverter.fromJson(posJson, CurrentPositionResponse::class) as CurrentPositionResponse?
     }
 
     fun setSafePosition(position: Position){
@@ -46,7 +46,7 @@ class Preferences(context: Context) {
 
     fun getSafePosition() : Position? {
         val posJson = sharedPrefences.getString("SafePosition", null) ?: return null
-        return GsonConverter.fromJson(posJson, Position::class.java) as Position?
+        return GsonConverter.fromJson(posJson, Position::class) as Position?
     }
 
     fun setRaio(raio: Int){

@@ -33,13 +33,13 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import kotlinx.android.synthetic.main.activity_maps.*
+import kotlinx.android.synthetic.main.activity_home.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var locationManager: LocationManager
@@ -47,7 +47,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_maps)
+        setContentView(R.layout.activity_home)
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
@@ -55,7 +55,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         btn_bluetooth.setOnClickListener {
             startActivity(
-                Intent(this@MapsActivity, BluetoothListActivity::class.java)
+                Intent(this@HomeActivity, BluetoothListActivity::class.java)
             )
         }
 
@@ -78,7 +78,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         }
         startActivityForResult(
             Intent(
-                this@MapsActivity, ScannerActivity::class.java
+                this@HomeActivity, ScannerActivity::class.java
             ), 4
         )
 
@@ -180,7 +180,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
         override fun onProviderDisabled(provider: String?) {
             Toast.makeText(
-                this@MapsActivity,
+                this@HomeActivity,
                 "O recurso de GPS está desabilitado neste aparelho",
                 Toast.LENGTH_SHORT
             ).show()
@@ -246,7 +246,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         registerCall.enqueue(object : Callback<Void> {
             override fun onFailure(call: Call<Void>, t: Throwable) {
                 Toast.makeText(
-                    this@MapsActivity,
+                    this@HomeActivity,
                     "Erro ao vincular dispositivo",
                     Toast.LENGTH_SHORT
                 ).show()
@@ -256,14 +256,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful){
                     Toast.makeText(
-                        this@MapsActivity,
+                        this@HomeActivity,
                         "Dispositivo vinculado com sucesso!",
                         Toast.LENGTH_SHORT
                     ).show()
-                    Preferences(this@MapsActivity).setMacAddress(req.macaddress)
+                    Preferences(this@HomeActivity).setMacAddress(req.macaddress)
                     callLastPositionFunction(req.macaddress)
                 } else if (response.code() == 400){
-                    Toast.makeText(this@MapsActivity, "Houve um problema ao encontrar o dispositivo", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@HomeActivity, "Houve um problema ao encontrar o dispositivo", Toast.LENGTH_SHORT).show()
                 }
             }
         })
@@ -279,7 +279,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         positionCall.enqueue(object : Callback<CurrentPositionResponse> {
             override fun onFailure(call: Call<CurrentPositionResponse>, t: Throwable) {
                 Toast.makeText(
-                    this@MapsActivity, "Erro ao carregar localização do dispositivo",
+                    this@HomeActivity, "Erro ao carregar localização do dispositivo",
                     Toast.LENGTH_SHORT
                 ).show()
                 loading?.dismiss()
@@ -290,7 +290,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 response: Response<CurrentPositionResponse>
             ) {
                 if (response.isSuccessful){
-                    Toast.makeText(this@MapsActivity, "LOcalização atualizada", Toast.LENGTH_SHORT)
+                    Toast.makeText(this@HomeActivity, "LOcalização atualizada", Toast.LENGTH_SHORT)
                         .show()
                     Log.d("Position", response.body()?.toString())
                     val position = response.body()
@@ -298,7 +298,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                     loading?.dismiss()
                 } else {
                     Toast.makeText(
-                        this@MapsActivity, "Erro ao carregar localização do dispositivo",
+                        this@HomeActivity, "Erro ao carregar localização do dispositivo",
                         Toast.LENGTH_SHORT
                     ).show()
                     loading?.dismiss()

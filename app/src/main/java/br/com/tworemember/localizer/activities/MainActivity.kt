@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun goToHome(){
-        val intent = Intent(this, MapsActivity::class.java)
+        val intent = Intent(this, HomeActivity::class.java)
         startActivity(intent)
         dialog?.dismiss()
         finish()

@@ -87,6 +87,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".activities.ScannerActivity" />
+        <activity android:name=".activities.SafePlaceActivity" />
     </application>
 
 </manifest>

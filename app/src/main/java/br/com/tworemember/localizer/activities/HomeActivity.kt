@@ -61,6 +61,15 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
         qr_scanner.setOnClickListener { scanQrCode() }
 
+        safe_position.setOnClickListener {
+            startActivity(
+                Intent(
+                    this@HomeActivity,
+                    SafePlaceActivity::class.java
+                )
+            )
+        }
+
         //TODO: iniciar serviço que irá realizar requisição.
     }
 
@@ -113,7 +122,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         setLocationInMap(getLatLntFromLocation(location))
     }
 
-    private fun getLatLntFromLocation(location: Location) : LatLng{
+    private fun getLatLntFromLocation(location: Location): LatLng {
         val lat = try {
             location.latitude
         } catch (e: NullPointerException) {
@@ -232,7 +241,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         callRegisterFunction(req)
     }
 
-    fun createLoading(message:String): ProgressDialog {
+    fun createLoading(message: String): ProgressDialog {
         val dialog =
             ProgressDialogProvider.showProgressDialog(this, message)
         return dialog
@@ -254,7 +263,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
             }
 
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
-                if (response.isSuccessful){
+                if (response.isSuccessful) {
                     Toast.makeText(
                         this@HomeActivity,
                         "Dispositivo vinculado com sucesso!",
@@ -262,8 +271,12 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
                     ).show()
                     Preferences(this@HomeActivity).setMacAddress(req.macaddress)
                     callLastPositionFunction(req.macaddress)
-                } else if (response.code() == 400){
-                    Toast.makeText(this@HomeActivity, "Houve um problema ao encontrar o dispositivo", Toast.LENGTH_SHORT).show()
+                } else if (response.code() == 400) {
+                    Toast.makeText(
+                        this@HomeActivity,
+                        "Houve um problema ao encontrar o dispositivo",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         })
@@ -289,7 +302,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
                 call: Call<CurrentPositionResponse>,
                 response: Response<CurrentPositionResponse>
             ) {
-                if (response.isSuccessful){
+                if (response.isSuccessful) {
                     Toast.makeText(this@HomeActivity, "LOcalização atualizada", Toast.LENGTH_SHORT)
                         .show()
                     Log.d("Position", response.body()?.toString())

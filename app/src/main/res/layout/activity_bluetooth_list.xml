@@ -4,6 +4,16 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+    <include layout="@layout/custom_toolbar"/>
+
+    <TextView
+            android:padding="16dp"
+            android:gravity="center"
+            android:textSize="16sp"
+            android:text="@string/msg_blt_conectar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
     <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_devices"
             android:layout_width="match_parent"

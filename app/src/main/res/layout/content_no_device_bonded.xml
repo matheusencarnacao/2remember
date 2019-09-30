@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:id="@+id/content_no_device"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/background_light">
+
+    <ImageView
+            android:id="@+id/iv_no_device"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:src="@drawable/no_band_red"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/tv_nenhum_dispositivo"
+            tools:ignore="ContentDescription" />
+
+    <TextView
+            android:id="@+id/tv_nenhum_dispositivo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nenhum_dispositivo_vinculado"
+            android:textColor="@android:color/black"
+            android:textSize="20sp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    <TextView
+            android:id="@+id/tv_msg_escanear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="@string/msg_escanear_dispositivo"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_nenhum_dispositivo" />
+
+    <Button
+            android:id="@+id/qr_scanner"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@color/colorAccent"
+            android:drawableStart="@drawable/scan_qr_code"
+            android:drawablePadding="16dp"
+            android:padding="16dp"
+            android:text="@string/escanear_caps"
+            android:textColor="#fff"
+            app:layout_constraintEnd_toEndOf="@id/tv_nenhum_dispositivo"
+            app:layout_constraintStart_toStartOf="@id/tv_nenhum_dispositivo"
+            app:layout_constraintTop_toBottomOf="@id/tv_msg_escanear"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

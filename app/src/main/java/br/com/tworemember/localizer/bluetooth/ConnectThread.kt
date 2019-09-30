@@ -68,7 +68,6 @@ class ConnectThread(
         context.runOnUiThread { delegate.onConnected() }
         val connectedThread =
             ConnectedThread(context, socket)
-        //TODO: pegar das preferencias
 
         val prefs = Preferences(context)
 
@@ -79,6 +78,8 @@ class ConnectThread(
             val bytes = gson.toJson(conf).toByteArray()
             connectedThread.write(bytes)
         }
+
+        //TODO: receber mensagem de volta do dispositivo
     }
 
 

@@ -3,12 +3,16 @@ package br.com.tworemember.localizer.activities
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.DialogInterface
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Criteria
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.SeekBar
 import android.widget.Toast
@@ -16,13 +20,18 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import br.com.tworemember.localizer.R
+import br.com.tworemember.localizer.providers.DialogProvider
 import br.com.tworemember.localizer.providers.Preferences
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.warkiz.widget.IndicatorSeekBar
+import com.warkiz.widget.OnSeekChangeListener
+import com.warkiz.widget.SeekParams
 import kotlinx.android.synthetic.main.activity_safe_place.*
+import kotlinx.android.synthetic.main.custom_toolbar.*
 
 
 class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
@@ -38,32 +47,57 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_safe_place)
 
+        setSupportActionBar(customToolbar)
+        supportActionBar?.setHomeButtonEnabled(true)
+        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_arrow_back)
+        title = "Area segura"
+
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
-        //TODO: implementar circulo no app
 
-        seekBar.max = 20
         seekBar.visibility = View.GONE
-        seekBar.setOnSeekBarChangeListener(object: SeekBar.OnSeekBarChangeListener{
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                val radius = progress * 25
-                radiusSafe = radius
-                setRadius(radius.toDouble())
+        seekBar.onSeekChangeListener = object: OnSeekChangeListener {
+            override fun onSeeking(seekParams: SeekParams?) {
+                seekParams?.let {
+                    val radius = it.progress
+                    radiusSafe = radius
+                    setRadius(radius.toDouble())
+                }
             }
 
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStartTrackingTouch(seekBar: IndicatorSeekBar?) {}
 
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-
-        })
-
-        salvar.setOnClickListener {
-            Preferences(this@SafePlaceActivity).setRaio(radiusSafe)
-            //TODO: implementar salvar localização e enviar para o bluetooth
+            override fun onStopTrackingTouch(seekBar: IndicatorSeekBar?) {}
         }
     }
 
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_safe_position, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        item?.let {
+            if(it.itemId == R.id.item_salvar){
+                saveConfig()
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun saveConfig(){
+        DialogProvider.showAlertDialog(this,
+            "Confirmar as informações carregadas",
+            "Confirmar",
+            DialogInterface.OnClickListener { dialog, _ ->
+                Preferences(this@SafePlaceActivity).setRaio(radiusSafe)
+                startActivity(Intent(this@SafePlaceActivity,
+                    BluetoothListActivity::class.java))
+                finish()
+            },
+            DialogInterface.OnClickListener { dialog, _ -> dialog.dismiss() })
+    }
 
     private fun checkPermission(permission: String): Boolean {
         return ContextCompat.checkSelfPermission(
@@ -72,29 +106,32 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
         ) != PackageManager.PERMISSION_GRANTED
     }
 
-    private fun askPermission(permissions: Array<String>) {
-        ActivityCompat.requestPermissions(this, permissions, 100)
+    private fun askPermission() {
+        ActivityCompat.requestPermissions(this, arrayOf(
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ), 100)
     }
 
     private fun getLocation() {
         if (checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION) ||
-            checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-        ) {
-            askPermission(
-                arrayOf(
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            )
+            checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
+            askPermission()
             return
         }
+
         locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         locationManager.requestLocationUpdates(
-            LocationManager.GPS_PROVIDER,
-            5000,
-            5f,
+            getBestProvider(),
+            2000,
+            1f,
             locationListener
         )
+    }
+
+    private fun getBestProvider() : String {
+        val criteria = Criteria()
+        return locationManager.getBestProvider(criteria, false)
     }
 
     private fun setRadius(radius: Double){
@@ -121,13 +158,14 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    @SuppressLint("MissingPermission")
     private fun getLastLocation() {
-        val criteria = Criteria()
-        val bestProvider = locationManager.getBestProvider(criteria, false)
-        val location = locationManager.getLastKnownLocation(bestProvider)
+        if (checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION) ||
+            checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
+            askPermission()
+            return
+        }
+        val location = locationManager.getLastKnownLocation(getBestProvider())
         setLocationInMap(LatLng(location.altitude, location.longitude))
-        //todo: pegar do spinner
     }
 
     override fun onRequestPermissionsResult(

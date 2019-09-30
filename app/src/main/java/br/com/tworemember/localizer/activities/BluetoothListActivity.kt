@@ -18,8 +18,9 @@ import br.com.tworemember.localizer.bluetooth.BluetoothDeviceDelegate
 import br.com.tworemember.localizer.bluetooth.ConnectThread
 import br.com.tworemember.localizer.bluetooth.ConnectionDelegate
 import br.com.tworemember.localizer.providers.Preferences
-import br.com.tworemember.localizer.providers.ProgressDialogProvider
+import br.com.tworemember.localizer.providers.DialogProvider
 import kotlinx.android.synthetic.main.activity_bluetooth_list.*
+import kotlinx.android.synthetic.main.custom_toolbar.*
 
 
 class BluetoothListActivity : AppCompatActivity(),
@@ -34,6 +35,10 @@ class BluetoothListActivity : AppCompatActivity(),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_bluetooth_list)
+
+        title = "Sincronizar dispositivo"
+        setSupportActionBar(customToolbar)
+
         btnAdapter = BluetoothAdapter.getDefaultAdapter()
         if (btnAdapter == null) {
             Toast.makeText(
@@ -102,6 +107,7 @@ class BluetoothListActivity : AppCompatActivity(),
                 verifyBluetoothEnabled()
             }
         }
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     private val receiver = object : BroadcastReceiver() {
@@ -156,7 +162,7 @@ class BluetoothListActivity : AppCompatActivity(),
         }
 
         override fun onConnecting() {
-            dialog = ProgressDialogProvider.showProgressDialog(
+            dialog = DialogProvider.showProgressDialog(
                 this@BluetoothListActivity,
                 "Conectando ao dispositivo..."
             )

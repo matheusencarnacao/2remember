@@ -3,25 +3,21 @@
 package br.com.tworemember.localizer.activities
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ProgressDialog
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.Criteria
-import android.location.Location
-import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import br.com.tworemember.localizer.providers.Preferences
-import br.com.tworemember.localizer.providers.ProgressDialogProvider
 import br.com.tworemember.localizer.R
+import br.com.tworemember.localizer.providers.Preferences
+import br.com.tworemember.localizer.providers.DialogProvider
 import br.com.tworemember.localizer.webservices.Functions
 import br.com.tworemember.localizer.webservices.RetrofitClient
 import br.com.tworemember.localizer.webservices.model.CurrentPositionRequest
@@ -34,6 +30,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import kotlinx.android.synthetic.main.activity_home.*
+import kotlinx.android.synthetic.main.content_no_device_bonded.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -53,12 +50,6 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        btn_bluetooth.setOnClickListener {
-            startActivity(
-                Intent(this@HomeActivity, BluetoothListActivity::class.java)
-            )
-        }
-
         qr_scanner.setOnClickListener { scanQrCode() }
 
         safe_position.setOnClickListener {
@@ -73,15 +64,29 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         //TODO: iniciar serviço que irá realizar requisição.
     }
 
-    private fun checkPermission(permission: String): Boolean {
+    override fun onResume() {
+        super.onResume()
+        verifyRegister()
+    }
+
+    private fun verifyRegister(){
+        val prefs = Preferences(this)
+        content_no_device.visibility = if (prefs.getMacAddress() == null) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
+    }
+
+    private fun checkPermission(): Boolean {
         return ContextCompat.checkSelfPermission(
             this,
-            permission
+            Manifest.permission.CAMERA
         ) != PackageManager.PERMISSION_GRANTED
     }
 
     private fun scanQrCode() {
-        if (checkPermission(Manifest.permission.CAMERA)) {
+        if (checkPermission()) {
             askPermission(arrayOf(Manifest.permission.CAMERA))
             return
         }
@@ -91,50 +96,6 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
             ), 4
         )
 
-    }
-
-    private fun getLocation() {
-        if (checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION) ||
-            checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-        ) {
-            askPermission(
-                arrayOf(
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
-            )
-            return
-        }
-        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        locationManager.requestLocationUpdates(
-            LocationManager.GPS_PROVIDER,
-            5000,
-            5f,
-            locationListener
-        )
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun getLastLocation() {
-        val criteria = Criteria()
-        val bestProvider = locationManager.getBestProvider(criteria, false)
-        val location = locationManager.getLastKnownLocation(bestProvider)
-        setLocationInMap(getLatLntFromLocation(location))
-    }
-
-    private fun getLatLntFromLocation(location: Location): LatLng {
-        val lat = try {
-            location.latitude
-        } catch (e: NullPointerException) {
-            -1.0
-        }
-        val lng = try {
-            location.longitude
-        } catch (e: NullPointerException) {
-            -1.0
-        }
-
-        return LatLng(lat, lng)
     }
 
     private fun setLocationInMap(myLocation: LatLng) {
@@ -162,48 +123,12 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
                         getString(R.string.msg_camera_required),
                         Toast.LENGTH_SHORT
                     ).show()
-            } else {
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                    getLocation()
-                else
-                    Toast.makeText(
-                        this,
-                        getString(R.string.msg_location_required),
-                        Toast.LENGTH_SHORT
-                    ).show()
             }
         }
     }
 
-    private val locationListener = object : LocationListener {
-        override fun onLocationChanged(location: Location?) {
-            if (location != null)
-                setLocationInMap(getLatLntFromLocation(location))
-            else
-                getLastLocation()
-        }
-
-        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
-
-        override fun onProviderEnabled(provider: String?) {}
-
-        override fun onProviderDisabled(provider: String?) {
-            Toast.makeText(
-                this@HomeActivity,
-                "O recurso de GPS está desabilitado neste aparelho",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
-
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera.
-     */
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-
 
         val macAddress = Preferences(this).getMacAddress()
         if (macAddress != null)
@@ -224,7 +149,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    fun registerDevice(macAddress: String) {
+    private fun registerDevice(macAddress: String) {
         loading = createLoading("Vinculando dispositivo...")
         val user = Preferences(this).getUser()
         if (user == null) {
@@ -241,13 +166,13 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         callRegisterFunction(req)
     }
 
-    fun createLoading(message: String): ProgressDialog {
+    private fun createLoading(message: String): ProgressDialog {
         val dialog =
-            ProgressDialogProvider.showProgressDialog(this, message)
+            DialogProvider.showProgressDialog(this, message)
         return dialog
     }
 
-    fun callRegisterFunction(req: RegisterRequest) {
+    private fun callRegisterFunction(req: RegisterRequest) {
 
         val functions = RetrofitClient.getInstance().create(Functions::class.java)
         val registerCall = functions.newRegister(req)
@@ -270,6 +195,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
                         Toast.LENGTH_SHORT
                     ).show()
                     Preferences(this@HomeActivity).setMacAddress(req.macaddress)
+                    verifyRegister()
                     callLastPositionFunction(req.macaddress)
                 } else if (response.code() == 400) {
                     Toast.makeText(
@@ -316,9 +242,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
                     ).show()
                     loading?.dismiss()
                 }
-
             }
-
         })
     }
 }

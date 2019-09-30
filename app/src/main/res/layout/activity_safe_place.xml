@@ -1,23 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:orientation="vertical" android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+    <include layout="@layout/custom_toolbar"/>
 
     <fragment
             android:id="@+id/map"
             android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"/>
-    <SeekBar
+            android:layout_weight="1" />
+
+    <TextView
+            android:textColor="@android:color/black"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:padding="16dp"
+            android:text="Deslize para aumentar a area de segurança"
+            android:background="@android:color/background_light"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+    <com.warkiz.widget.IndicatorSeekBar
+            android:padding="16dp"
+            android:background="@android:color/background_light"
             android:id="@+id/seekBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp" />
+            app:isb_indicator_color="@color/newRed"
+            app:isb_indicator_text_color="@android:color/background_light"
+            app:isb_indicator_text_size="18sp"
+            app:isb_max="250"
+            app:isb_min="25"
+            app:isb_only_thumb_draggable="true"
+            app:isb_seek_smoothly="false"
+            app:isb_show_indicator="rounded_rectangle"
+            app:isb_show_tick_marks_type="oval"
+            app:isb_show_tick_texts="false"
+            app:isb_thumb_color="@color/newRed"
+            app:isb_thumb_size="20dp"
+            app:isb_tick_marks_size="13dp"
+            app:isb_tick_texts_color="@color/newRed"
+            app:isb_tick_texts_size="15sp"
+            app:isb_ticks_count="10"
+            app:isb_track_background_size="2dp"
+            app:isb_track_progress_color="@color/newRed"
+            app:isb_track_progress_size="4dp" />
 
-    <Button
-            android:id="@+id/salvar"
-        android:text="salvar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
 </LinearLayout>

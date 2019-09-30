@@ -10,7 +10,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import br.com.tworemember.localizer.providers.Preferences
-import br.com.tworemember.localizer.providers.ProgressDialogProvider
+import br.com.tworemember.localizer.providers.DialogProvider
 import br.com.tworemember.localizer.R
 import br.com.tworemember.localizer.DAO.UserDAO
 import com.facebook.AccessToken
@@ -150,7 +150,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     private fun iniciarDialog(){
-        dialog = ProgressDialogProvider.showProgressDialog(
+        dialog = DialogProvider.showProgressDialog(
             this,
             "Realizando login..."
         )

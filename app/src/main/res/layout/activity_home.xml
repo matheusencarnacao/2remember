@@ -10,21 +10,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
-    <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+    <include layout="@layout/content_device_status"/>
 
-        <ImageButton
-                android:layout_centerHorizontal="true"
-                android:layout_margin="16dp"
-                android:id="@+id/safe_position"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:src="@drawable/ic_person_pin_circle_black_24dp"
-                tools:ignore="ContentDescription" />
+    <include layout="@layout/content_fab_home"/>
 
-    </RelativeLayout>
-
-    <include layout="@layout/content_no_device_bonded"/>
+    <include layout="@layout/content_no_device_bonded" />
 
 </FrameLayout>

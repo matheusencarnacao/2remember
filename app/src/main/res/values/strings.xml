@@ -11,4 +11,9 @@
     <string name="nenhum_dispositivo_vinculado">Nenhum dispositivo vinculado!</string>
     <string name="escanear_caps">ESCANEAR</string>
     <string name="msg_blt_conectar">Clique no dispositivo a baixo para conectar</string>
+    <string name="msg_deslize">Deslize para aumentar a area de segurança</string>
+    <string name="title_activity_test">TestActivity</string>
+    <string name="msg_modal_btn_panic">Atenção! o Botão de emergência foi pressionado!</string>
+    <string name="msg_modal_disconnected">Ops! a pulseira está desconectada</string>
+    <string name="msg_modal_low_battery">Bateria está fraca, coloque a pulseira para carregar.</string>
 </resources>

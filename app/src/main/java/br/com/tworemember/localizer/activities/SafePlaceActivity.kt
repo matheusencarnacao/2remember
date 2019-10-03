@@ -1,7 +1,6 @@
 package br.com.tworemember.localizer.activities
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
@@ -14,7 +13,6 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.SeekBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -47,7 +45,7 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_safe_place)
 
-        setSupportActionBar(customToolbar)
+        setSupportActionBar(toolbar)
         supportActionBar?.setHomeButtonEnabled(true)
         supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_arrow_back)
         title = "Area segura"
@@ -143,7 +141,7 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
                     .strokeWidth(0f)
                     .fillColor(0x330000FF))
         } else {
-            circle?.radius = radius.toDouble()
+            circle?.radius = radius
         }
     }
 
@@ -209,6 +207,7 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(p0: GoogleMap) {
         mMap = p0
+        //mMap.isMyLocationEnabled = true
         getLocation()
     }
 }

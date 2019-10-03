@@ -56,4 +56,28 @@ class Preferences(context: Context) {
     fun getRaio() : Int{
         return sharedPrefences.getInt("Raio", 0)
     }
+
+    fun setPanicButtonOn(on: Boolean) {
+        sharedPrefences.edit().putBoolean("panicButton", on).apply()
+    }
+
+    fun isPanicButtonOn() : Boolean{
+        return sharedPrefences.getBoolean("panicButton", false)
+    }
+
+    fun setDisconnectedBand(isDiconnected: Boolean){
+        sharedPrefences.edit().putBoolean("disconnectedBand", isDiconnected).apply()
+    }
+
+    fun isDisconnectedBand() : Boolean {
+        return sharedPrefences.getBoolean("disconnectedBand", false)
+    }
+
+    fun setBatteryLow(isLow: Boolean) {
+        sharedPrefences.edit().putBoolean("lowBattery", isLow).apply()
+    }
+
+    fun isBatteryLow() : Boolean {
+        return sharedPrefences.getBoolean("lowBattery", false)
+    }
 }

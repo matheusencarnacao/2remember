@@ -7,7 +7,6 @@ import android.app.Activity
 import android.app.ProgressDialog
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -16,12 +15,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import br.com.tworemember.localizer.R
-import br.com.tworemember.localizer.providers.Preferences
 import br.com.tworemember.localizer.providers.DialogProvider
-import br.com.tworemember.localizer.webservices.Functions
-import br.com.tworemember.localizer.webservices.RetrofitClient
-import br.com.tworemember.localizer.webservices.model.CurrentPositionRequest
-import br.com.tworemember.localizer.webservices.model.CurrentPositionResponse
+import br.com.tworemember.localizer.providers.Preferences
+import br.com.tworemember.localizer.webservices.*
 import br.com.tworemember.localizer.webservices.model.RegisterRequest
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -29,44 +25,92 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import kotlinx.android.synthetic.main.activity_home.*
+import com.google.firebase.auth.FirebaseAuth
+import kotlinx.android.synthetic.main.content_device_status.*
+import kotlinx.android.synthetic.main.content_fab_home.*
 import kotlinx.android.synthetic.main.content_no_device_bonded.*
+import org.greenrobot.eventbus.EventBus
+import org.greenrobot.eventbus.Subscribe
+import org.greenrobot.eventbus.ThreadMode
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.util.regex.Pattern
 
 
 class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
-    private lateinit var locationManager: LocationManager
     private var loading: ProgressDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        modalConfig()
 
         qr_scanner.setOnClickListener { scanQrCode() }
 
-        safe_position.setOnClickListener {
-            startActivity(
-                Intent(
-                    this@HomeActivity,
-                    SafePlaceActivity::class.java
-                )
-            )
-        }
-
-        //TODO: iniciar serviço que irá realizar requisição.
+        fab_area_segura.setOnClickListener { goToSafePlace() }
+        fab_logout.setOnClickListener{ logout() }
+        fab_settings.setOnClickListener{ goToSettings() }
     }
 
     override fun onResume() {
         super.onResume()
         verifyRegister()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        EventBus.getDefault().register(this)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        EventBus.getDefault().unregister(this)
+    }
+
+    fun modalConfig(){
+        val prefs = Preferences(this)
+        modal_panic_btn.visibility = if(prefs.isPanicButtonOn()) { View.VISIBLE } else { View.GONE }
+        modal_disconnected.visibility = if(prefs.isDisconnectedBand()) { View.VISIBLE } else { View.GONE }
+        modal_low_battery.visibility = if(prefs.isBatteryLow()) { View.VISIBLE } else { View.GONE }
+
+        close_modal_panic_btn.setOnClickListener {
+            prefs.setPanicButtonOn(false)
+            modal_panic_btn.visibility = View.GONE
+        }
+        close_modal_disconnected.setOnClickListener {
+            prefs.setDisconnectedBand(false)
+            modal_disconnected.visibility = View.GONE
+        }
+        close_modal_low_battery.setOnClickListener {
+            prefs.setBatteryLow(false)
+            modal_low_battery.visibility = View.GONE
+        }
+    }
+
+    private fun goToSettings() {
+        //TODO: Criar activity de configuração
+        Toast.makeText(this, "Em breve...", Toast.LENGTH_SHORT).show()
+    }
+
+    fun goToSafePlace(){
+        val intent = Intent(this@HomeActivity, SafePlaceActivity::class.java)
+        startActivity(intent)
+    }
+
+    fun logout(){
+        val auth = FirebaseAuth.getInstance()
+        auth.signOut()
+
+        val intent = Intent(this, MainActivity::class.java)
+        startActivity(intent)
+        finish()
     }
 
     private fun verifyRegister(){
@@ -130,9 +174,8 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        val macAddress = Preferences(this).getMacAddress()
-        if (macAddress != null)
-            callLastPositionFunction(macAddress)
+        val intent = Intent(this, LocationService::class.java)
+        startService(intent)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -140,13 +183,22 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
             if (data == null) {
                 Toast.makeText(this, "Erro ao ler QR Code.", Toast.LENGTH_LONG).show()
             } else {
-                //TODO:Verificar se o macaddress é valido.
                 val macaddress = data.getStringExtra("value")
-                registerDevice(macaddress)
+                if(macValidate(macaddress)){
+                    registerDevice(macaddress)
+                } else {
+                    Toast.makeText(this, "Formato de MacAddress inválido", Toast.LENGTH_LONG).show()
+                }
             }
         } else {
             super.onActivityResult(requestCode, resultCode, data)
         }
+    }
+
+    fun macValidate(mac: String) : Boolean {
+        val p = Pattern.compile("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$")
+        val m = p.matcher(mac)
+        return m.find()
     }
 
     private fun registerDevice(macAddress: String) {
@@ -211,38 +263,25 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
     fun callLastPositionFunction(macAddress: String) {
         loading?.dismiss()
         loading = createLoading("Localizando dispositivo, aguarde...")
-        val functions = RetrofitClient.getInstance().create(Functions::class.java)
-        val currentPositionRequest = CurrentPositionRequest(macAddress)
-        val positionCall = functions.lastPosition(currentPositionRequest)
+        FunctionTrigger.callLastPositionFunction(macAddress)
+    }
 
-        positionCall.enqueue(object : Callback<CurrentPositionResponse> {
-            override fun onFailure(call: Call<CurrentPositionResponse>, t: Throwable) {
-                Toast.makeText(
-                    this@HomeActivity, "Erro ao carregar localização do dispositivo",
-                    Toast.LENGTH_SHORT
-                ).show()
-                loading?.dismiss()
-            }
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onLocationSucess(event: LastLocationSucessEvent) {
+        Toast.makeText(this@HomeActivity, "LOcalização atualizada", Toast.LENGTH_SHORT)
+            .show()
+        val position = event.location
+        setLocationInMap(LatLng(position.lat, position.lng))
+        loading?.dismiss()
+    }
 
-            override fun onResponse(
-                call: Call<CurrentPositionResponse>,
-                response: Response<CurrentPositionResponse>
-            ) {
-                if (response.isSuccessful) {
-                    Toast.makeText(this@HomeActivity, "LOcalização atualizada", Toast.LENGTH_SHORT)
-                        .show()
-                    Log.d("Position", response.body()?.toString())
-                    val position = response.body()
-                    position?.let { setLocationInMap(LatLng(it.lat, it.lng)) }
-                    loading?.dismiss()
-                } else {
-                    Toast.makeText(
-                        this@HomeActivity, "Erro ao carregar localização do dispositivo",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    loading?.dismiss()
-                }
-            }
-        })
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    fun onLOcationFailed(event: LastLocationFailureEvent) {
+        Log.d("${event.javaClass.simpleName}: ", event.errorMessage)
+        Toast.makeText(
+            this@HomeActivity, "Erro ao carregar localização do dispositivo",
+            Toast.LENGTH_SHORT
+        ).show()
+        loading?.dismiss()
     }
 }

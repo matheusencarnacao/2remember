@@ -37,7 +37,7 @@ class BluetoothListActivity : AppCompatActivity(),
         setContentView(R.layout.activity_bluetooth_list)
 
         title = "Sincronizar dispositivo"
-        setSupportActionBar(customToolbar)
+        setSupportActionBar(toolbar)
 
         btnAdapter = BluetoothAdapter.getDefaultAdapter()
         if (btnAdapter == null) {

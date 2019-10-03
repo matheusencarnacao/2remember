@@ -9,10 +9,10 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import br.com.tworemember.localizer.providers.Preferences
-import br.com.tworemember.localizer.providers.DialogProvider
-import br.com.tworemember.localizer.R
 import br.com.tworemember.localizer.DAO.UserDAO
+import br.com.tworemember.localizer.R
+import br.com.tworemember.localizer.providers.DialogProvider
+import br.com.tworemember.localizer.providers.Preferences
 import com.facebook.AccessToken
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
@@ -111,10 +111,6 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-
-        // Pass the activity result back to the Facebook SDK
-        callbackManager.onActivityResult(requestCode, resultCode, data)
-
         if (requestCode == RC_SIGN_IN) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(data)
             try {
@@ -126,6 +122,9 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
                 Log.w("MainActivity", "Google sign in failed", e)
                 // ...
             }
+        } else {
+            // Pass the activity result back to the Facebook SDK
+            callbackManager.onActivityResult(requestCode, resultCode, data)
         }
     }
 

@@ -67,7 +67,7 @@ class ConnectThread(
     private fun manageConnectedSocket(socket: BluetoothSocket) {
         context.runOnUiThread { delegate.onConnected() }
         val connectedThread =
-            ConnectedThread(context, socket)
+            ConnectedThread(context, socket, delegate)
 
         val prefs = Preferences(context)
 
@@ -78,10 +78,7 @@ class ConnectThread(
             val bytes = gson.toJson(conf).toByteArray()
             connectedThread.write(bytes)
         }
-
-        //TODO: receber mensagem de volta do dispositivo
     }
-
 
     /** Will cancel an in-progress connection, and close the socket */
     fun cancel() {

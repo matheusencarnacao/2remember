@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import br.com.tworemember.localizer.R
+import br.com.tworemember.localizer.model.Position
 import br.com.tworemember.localizer.providers.DialogProvider
 import br.com.tworemember.localizer.providers.Preferences
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -70,6 +71,14 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
+    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+        menu?.let {
+            val item = it.findItem(R.id.item_salvar)
+            item.isVisible = myPosition != null
+        }
+        return super.onPrepareOptionsMenu(menu)
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_safe_position, menu)
         return super.onCreateOptionsMenu(menu)
@@ -89,10 +98,14 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
             "Confirmar as informações carregadas",
             "Confirmar",
             DialogInterface.OnClickListener { dialog, _ ->
-                Preferences(this@SafePlaceActivity).setRaio(radiusSafe)
-                startActivity(Intent(this@SafePlaceActivity,
-                    BluetoothListActivity::class.java))
-                finish()
+                myPosition?.let {
+                    val prefs = Preferences(this@SafePlaceActivity)
+                    prefs.setRaio(radiusSafe)
+                    prefs.setSafePosition(Position(it.latitude, it.longitude))
+                    startActivity(Intent(this@SafePlaceActivity,
+                        BluetoothListActivity::class.java))
+                    finish()
+                }
             },
             DialogInterface.OnClickListener { dialog, _ -> dialog.dismiss() })
     }

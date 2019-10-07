@@ -9,6 +9,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,17 +18,20 @@ import br.com.tworemember.localizer.adapter.DeviceAdapter
 import br.com.tworemember.localizer.bluetooth.BluetoothDeviceDelegate
 import br.com.tworemember.localizer.bluetooth.ConnectThread
 import br.com.tworemember.localizer.bluetooth.ConnectionDelegate
-import br.com.tworemember.localizer.providers.Preferences
 import br.com.tworemember.localizer.providers.DialogProvider
+import br.com.tworemember.localizer.providers.Preferences
 import kotlinx.android.synthetic.main.activity_bluetooth_list.*
 import kotlinx.android.synthetic.main.custom_toolbar.*
+import java.util.*
+import kotlin.collections.ArrayList
 
 
+@Suppress("DEPRECATION")
 class BluetoothListActivity : AppCompatActivity(),
     BluetoothDeviceDelegate {
 
     private var btnAdapter: BluetoothAdapter? = null
-    private val request_enable_bt = 817
+    private val requestEnableBT = 817
     private var devices = ArrayList<BluetoothDevice>()
     private var dialog: ProgressDialog? = null
     private var connectThread: ConnectThread? = null
@@ -69,7 +73,7 @@ class BluetoothListActivity : AppCompatActivity(),
             return
         }
         val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-        startActivityForResult(enableBtIntent, request_enable_bt)
+        startActivityForResult(enableBtIntent, requestEnableBT)
     }
 
     private fun connectToBondedDevice(){
@@ -95,7 +99,7 @@ class BluetoothListActivity : AppCompatActivity(),
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == request_enable_bt) {
+        if (requestCode == requestEnableBT) {
             if (resultCode == Activity.RESULT_OK)
                 connectToBondedDevice()
             else {
@@ -149,6 +153,16 @@ class BluetoothListActivity : AppCompatActivity(),
     }
 
     private val delegate = object : ConnectionDelegate {
+        override fun onSendedInfo(message: String) {
+            Log.d(BluetoothListActivity::class.java.simpleName, message)
+            if(message.toLowerCase(locale = Locale.getDefault()) == "ok"){
+                val intent = Intent(this@BluetoothListActivity,
+                    HomeActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
+            }
+        }
 
         override fun onError(message: String) {
             dialog?.dismiss()

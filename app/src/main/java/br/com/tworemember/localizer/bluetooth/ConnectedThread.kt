@@ -2,16 +2,18 @@ package br.com.tworemember.localizer.bluetooth
 
 import android.app.Activity
 import android.bluetooth.BluetoothSocket
-import android.content.Context
 import android.util.Log
 import android.widget.Toast
+import org.apache.commons.io.IOUtils
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.nio.charset.Charset
 
 
 class ConnectedThread(private val context: Activity,
-                      private val socket: BluetoothSocket) : Thread() {
+                      private val socket: BluetoothSocket,
+                      private val delegate: ConnectionDelegate) : Thread() {
 
     private var inputStream: InputStream? = null
     private var outputStream: OutputStream? = null
@@ -36,16 +38,15 @@ class ConnectedThread(private val context: Activity,
 
     override fun run() {
         val buffer = ByteArray(1024)  // buffer store for the stream
-        var bytes: Int? = null // bytes returned from read()
 
         // Keep listening to the InputStream until an exception occurs
         while (true) {
             try {
                 // Read from the InputStream
-                bytes = inputStream?.read(buffer)
                 // Send the obtained bytes to the UI activity
                 //mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget()
-                print(bytes)
+                val message = IOUtils.toString(inputStream, Charset.defaultCharset())
+                context.runOnUiThread { delegate.onSendedInfo(message) }
             } catch (e: IOException) {
                 break
             }

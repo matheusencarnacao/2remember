@@ -7,7 +7,7 @@
         android:layout_height="match_parent">
 
     <com.github.clans.fab.FloatingActionMenu
-            android:id="@+id/material_design_android_floating_action_menu"
+            android:id="@+id/fab_menu"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
@@ -47,13 +47,13 @@
             fab:menu_showShadow="true">
 
         <com.github.clans.fab.FloatingActionButton
-                android:id="@+id/fab_area_segura"
+                android:id="@+id/fab_logout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                fab:fab_label="àrea segura"
+                fab:fab_label="Logout"
                 fab:fab_colorNormal="@color/colorPrimary"
                 fab:fab_colorPressed="@color/colorPrimaryPressed"
-                android:src="@drawable/ic_person_pin"
+                android:src="@drawable/ic_exit_to_app"
                 fab:fab_size="mini"
                 tools:ignore="VectorDrawableCompat" />
 
@@ -69,15 +69,27 @@
                 tools:ignore="VectorDrawableCompat" />
 
         <com.github.clans.fab.FloatingActionButton
-                android:id="@+id/fab_logout"
+                android:id="@+id/fab_area_segura"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                fab:fab_label="Logout"
+                fab:fab_label="àrea segura"
                 fab:fab_colorNormal="@color/colorPrimary"
                 fab:fab_colorPressed="@color/colorPrimaryPressed"
-                android:src="@drawable/ic_exit_to_app"
+                android:src="@drawable/ic_person_pin"
                 fab:fab_size="mini"
                 tools:ignore="VectorDrawableCompat" />
     </com.github.clans.fab.FloatingActionMenu>
+
+    <com.github.clans.fab.FloatingActionButton
+            android:layout_alignBottom="@id/fab_menu"
+            android:layout_centerHorizontal="true"
+            android:id="@+id/fab_last_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            fab:fab_colorNormal="@android:color/background_light"
+            fab:fab_colorPressed="@android:color/background_light"
+            android:src="@drawable/ic_my_location_blue_24dp"
+            fab:fab_size="normal"
+            tools:ignore="VectorDrawableCompat" />
 
 </RelativeLayout>

@@ -88,6 +88,8 @@
 
         <activity android:name=".activities.ScannerActivity" />
         <activity android:name=".activities.SafePlaceActivity" />
+
+        <receiver android:name=".webservices.LocationBroadCastReceiver" />
     </application>
 
 </manifest>

@@ -77,6 +77,7 @@ class ConnectThread(
             val gson = Gson()
             val bytes = gson.toJson(conf).toByteArray()
             connectedThread.write(bytes)
+            connectedThread.start()
         }
     }
 

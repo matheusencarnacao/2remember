@@ -17,6 +17,7 @@ import br.com.tworemember.localizer.R
 import br.com.tworemember.localizer.adapter.DeviceAdapter
 import br.com.tworemember.localizer.bluetooth.BluetoothDeviceDelegate
 import br.com.tworemember.localizer.bluetooth.ConnectThread
+import br.com.tworemember.localizer.bluetooth.ConnectedThread
 import br.com.tworemember.localizer.bluetooth.ConnectionDelegate
 import br.com.tworemember.localizer.providers.DialogProvider
 import br.com.tworemember.localizer.providers.Preferences
@@ -76,17 +77,21 @@ class BluetoothListActivity : AppCompatActivity(),
         startActivityForResult(enableBtIntent, requestEnableBT)
     }
 
-    private fun connectToBondedDevice(){
+    private fun connectToBondedDevice() {
         val macAddress = Preferences(this).getMacAddress()
-        if(macAddress == null){
-            Toast.makeText(this, getString(R.string.msg_macaddress_bluetooth_null), Toast.LENGTH_SHORT).show()
+        if (macAddress == null) {
+            Toast.makeText(
+                this,
+                getString(R.string.msg_macaddress_bluetooth_null),
+                Toast.LENGTH_SHORT
+            ).show()
             finish()
             return
         }
         startDiscovery(macAddress)
     }
 
-    private fun startDiscovery(macAddress:String) {
+    private fun startDiscovery(macAddress: String) {
         btnAdapter!!.startDiscovery()
         // Register the BroadcastReceiver
         val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
@@ -142,7 +147,7 @@ class BluetoothListActivity : AppCompatActivity(),
         return devices.any { it.address == device.address }
     }
 
-    private fun verifyDeviceMacAddress(device: BluetoothDevice, macAddress: String) : Boolean{
+    private fun verifyDeviceMacAddress(device: BluetoothDevice, macAddress: String): Boolean {
         return device.address == macAddress
     }
 
@@ -153,11 +158,14 @@ class BluetoothListActivity : AppCompatActivity(),
     }
 
     private val delegate = object : ConnectionDelegate {
-        override fun onSendedInfo(message: String) {
-            Log.d(BluetoothListActivity::class.java.simpleName, message)
-            if(message.toLowerCase(locale = Locale.getDefault()) == "ok"){
-                val intent = Intent(this@BluetoothListActivity,
-                    HomeActivity::class.java)
+        override fun onSendedInfo(message: String, connectedThread: ConnectedThread) {
+            Log.d(BluetoothListActivity::class.java.simpleName, "Mensagem recebida: $message")
+            if (message.trim().toLowerCase(locale = Locale.getDefault()) == "ok") {
+                connectedThread.cancel()
+                val intent = Intent(
+                    this@BluetoothListActivity,
+                    HomeActivity::class.java
+                )
                 intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
                 finish()

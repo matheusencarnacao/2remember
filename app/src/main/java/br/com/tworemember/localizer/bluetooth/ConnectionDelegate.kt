@@ -6,7 +6,7 @@ interface ConnectionDelegate {
 
     fun onConnecting()
 
-    fun onSendedInfo(message: String)
+    fun onSendedInfo(message: String, connectedThread: ConnectedThread)
 
     fun onError(message: String)
 }

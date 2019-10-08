@@ -41,6 +41,7 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
     private var circle: Circle? = null
     private var marker: Marker? = null
     private var radiusSafe = 0
+    private var item: MenuItem? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,11 +74,13 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
         menu?.let {
-            val item = it.findItem(R.id.item_salvar)
-            item.isVisible = myPosition != null
+            item = it.findItem(R.id.item_salvar)
+            updateMenuItem()
         }
         return super.onPrepareOptionsMenu(menu)
     }
+
+    private fun updateMenuItem(){ item?.isVisible = myPosition != null }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_safe_position, menu)
@@ -160,6 +163,8 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun setLocationInMap(myLocation: LatLng) {
         myPosition = myLocation
+        updateMenuItem()
+
         seekBar.visibility = View.VISIBLE
         if (marker == null){
             marker = mMap.addMarker(MarkerOptions().position(myLocation).title("Device is here!"))

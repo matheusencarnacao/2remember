@@ -4,11 +4,9 @@ import android.app.Activity
 import android.bluetooth.BluetoothSocket
 import android.util.Log
 import android.widget.Toast
-import org.apache.commons.io.IOUtils
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import java.nio.charset.Charset
 
 
 class ConnectedThread(private val context: Activity,
@@ -37,16 +35,22 @@ class ConnectedThread(private val context: Activity,
     }
 
     override fun run() {
-        val buffer = ByteArray(1024)  // buffer store for the stream
+        val buffer = ByteArray(1024)
+        var bytes: Int?
 
-        // Keep listening to the InputStream until an exception occurs
+        val stringBuilder = StringBuilder()
+
+        // Keep looping to listen for received messages
         while (true) {
             try {
-                // Read from the InputStream
-                // Send the obtained bytes to the UI activity
-                //mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget()
-                val message = IOUtils.toString(inputStream, Charset.defaultCharset())
-                context.runOnUiThread { delegate.onSendedInfo(message) }
+                bytes = inputStream?.read(buffer) //read bytes from input buffer
+                bytes?.let {
+                    val readMessage = String(buffer, 0, it)
+                    stringBuilder.append(readMessage)
+                    // Send the obtained bytes to the UI Activity via handler
+                    delegate.onSendedInfo(stringBuilder.toString(), this)
+                    stringBuilder.setLength(0)
+                }
             } catch (e: IOException) {
                 break
             }

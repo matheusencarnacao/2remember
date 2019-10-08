@@ -208,7 +208,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
                 val likelyPlacesAttributtions = ArrayList<String?>(count)
                 val likelyPlacesLatLngs = ArrayList<LatLng>(count)
 
-                for (likelyPlace in likelyPlaces){
+                for (likelyPlace in likelyPlaces) {
                     likelyPlacesName.add(likelyPlace.place.name.toString())
                     likelyPlacesAddresses.add(likelyPlace.place.address.toString())
                     likelyPlacesAttributtions.add(likelyPlace.place.attributions.toString())

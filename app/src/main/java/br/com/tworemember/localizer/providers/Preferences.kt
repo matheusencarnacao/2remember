@@ -80,4 +80,20 @@ class Preferences(context: Context) {
     fun isBatteryLow() : Boolean {
         return sharedPrefences.getBoolean("lowBattery", false)
     }
+
+    fun setNome(nome: String){
+        sharedPrefences.edit().putString("nome", nome).apply()
+    }
+
+    fun getNome() : String {
+        return sharedPrefences.getString("nome", "")!!
+    }
+
+    fun setCelular(phone: String){
+        sharedPrefences.edit().putString("celular", phone).apply()
+    }
+
+    fun getCelular() : String {
+        return sharedPrefences.getString("celular", "")!!
+    }
 }

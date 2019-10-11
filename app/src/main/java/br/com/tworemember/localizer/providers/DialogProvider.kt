@@ -25,7 +25,7 @@ class DialogProvider {
             dialog.setTitle(title)
             dialog.setMessage(message)
             dialog.setPositiveButton("OK", positiveClick)
-            negativeClick?.let { dialog.setNegativeButton("Cancelar", it) }
+            dialog.setNegativeButton("Cancelar", negativeClick)
             return dialog.show()
         }
 

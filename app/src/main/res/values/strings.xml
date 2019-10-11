@@ -16,4 +16,11 @@
     <string name="msg_modal_btn_panic">Atenção! o Botão de emergência foi pressionado!</string>
     <string name="msg_modal_disconnected">Ops! a pulseira está desconectada</string>
     <string name="msg_modal_low_battery">Bateria está fraca, coloque a pulseira para carregar.</string>
+    <string name="service_not_available">Serviço indisponível</string>
+    <string name="invalid_lat_long_used">Localização inválida</string>
+    <string name="no_address_found">Endereço não encontrado</string>
+    <string name="address_found">Endereço encontrado</string>
+    <string name="nome">Nome do usuário</string>
+    <string name="celular">Celular de emergência</string>
+    <string name="configuracoes">Configurações</string>
 </resources>

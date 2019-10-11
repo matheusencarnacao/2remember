@@ -4,14 +4,14 @@ package br.com.tworemember.localizer.activities
 
 import android.Manifest
 import android.app.Activity
-import android.app.AlertDialog
 import android.app.ProgressDialog
-import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.ResultReceiver
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
@@ -25,10 +25,6 @@ import br.com.tworemember.localizer.providers.DialogProvider
 import br.com.tworemember.localizer.providers.Preferences
 import br.com.tworemember.localizer.webservices.*
 import br.com.tworemember.localizer.webservices.model.RegisterRequest
-import com.google.android.gms.location.places.GeoDataClient
-import com.google.android.gms.location.places.PlaceDetectionClient
-import com.google.android.gms.location.places.PlaceLikelihoodBufferResponse
-import com.google.android.gms.location.places.Places
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -42,7 +38,6 @@ import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_device_status.*
 import kotlinx.android.synthetic.main.content_fab_home.*
 import kotlinx.android.synthetic.main.content_no_device_bonded.*
-import kotlinx.android.synthetic.main.custom_info_contents.*
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
@@ -57,21 +52,13 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
     private var mMap: GoogleMap? = null
     private var loading: ProgressDialog? = null
     private var lastLocation: LatLng? = null
-    private lateinit var geoDataClient: GeoDataClient
-    private lateinit var placeDetectionClient: PlaceDetectionClient
-
-    private val M_MAX_ENTRIES = 5
-//    private String[] mLikelyPlaceNames;
-//    private String[] mLikelyPlaceAddresses;
-//    private String[] mLikelyPlaceAttributions;
-//    private LatLng[] mLikelyPlaceLatLngs;
+    private lateinit var resultReceiver: AddressResultReceiver
+    private var marker:Marker? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
-        geoDataClient = Places.getGeoDataClient(this, null)
-        placeDetectionClient = Places.getPlaceDetectionClient(this, null)
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -145,8 +132,10 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun goToSettings() {
-        //TODO: Criar activity de configuração
-        Toast.makeText(this, "Em breve...", Toast.LENGTH_SHORT).show()
+//        Toast.makeText(this, "Em breve...", Toast.LENGTH_SHORT).show()
+        startActivity(
+            Intent(this, ConfiguracoesActivity::class.java)
+        )
     }
 
     fun goToSafePlace() {
@@ -191,36 +180,6 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         )
     }
 
-    private fun showCurrentPlace() {
-        val placeResult = placeDetectionClient.getCurrentPlace(null)
-        placeResult.addOnCompleteListener {
-            if (it.isSuccessful && it.result != null) {
-                val likelyPlaces = it.result as PlaceLikelihoodBufferResponse
-
-                val count = if (likelyPlaces.count < M_MAX_ENTRIES) {
-                    likelyPlaces.count
-                } else {
-                    M_MAX_ENTRIES
-                }
-
-                val likelyPlacesName = ArrayList<String>(count)
-                val likelyPlacesAddresses = ArrayList<String>(count)
-                val likelyPlacesAttributtions = ArrayList<String?>(count)
-                val likelyPlacesLatLngs = ArrayList<LatLng>(count)
-
-                for (likelyPlace in likelyPlaces) {
-                    likelyPlacesName.add(likelyPlace.place.name.toString())
-                    likelyPlacesAddresses.add(likelyPlace.place.address.toString())
-                    likelyPlacesAttributtions.add(likelyPlace.place.attributions.toString())
-                    likelyPlacesLatLngs.add(likelyPlace.place.latLng)
-                }
-
-                likelyPlaces.release()
-
-                //TODO: fazer alguma coisa com os lugares
-            }
-        }
-    }
 
     private fun zoomToLastLocation() {
         lastLocation?.let { mMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(it, 15f)) }
@@ -228,13 +187,13 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun setLocationInMap(location: LatLng) {
         lastLocation = location
-        val icon = BitmapDescriptorFactory.fromResource(R.drawable.ic_marker_blue)
+        val icon = BitmapDescriptorFactory.fromResource(R.drawable.ic_person_pin_circle)
         mMap?.clear()
-        mMap?.addMarker(
+        //TODO: nome do dispositivo
+        marker = mMap?.addMarker(
             MarkerOptions()
                 .position(location)
                 .title("Device is here!")
-                .snippet("Olha o veio aqui")
                 .icon(icon)
         )
         zoomToLastLocation()
@@ -265,28 +224,6 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-
-        mMap?.setInfoWindowAdapter(object : GoogleMap.InfoWindowAdapter {
-            override fun getInfoContents(marker: Marker?): View {
-                val infoWindow = layoutInflater.inflate(
-                    R.layout.custom_info_contents,
-                    findViewById(R.id.map),
-                    false
-                )
-                val title = infoWindow.findViewById<TextView>(R.id.title)
-                title.text = marker?.title
-
-                val snippet = infoWindow.findViewById<TextView>(R.id.snippet)
-                snippet.text = marker?.snippet
-
-                return infoWindow
-            }
-
-            override fun getInfoWindow(p0: Marker?): View? {
-                return null
-            }
-
-        })
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -382,7 +319,9 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         Toast.makeText(this@HomeActivity, "LOocalização atualizada", Toast.LENGTH_SHORT)
             .show()
         val position = event.location
-        setLocationInMap(LatLng(position.lat, position.lng))
+        val location = LatLng(position.lat, position.lng)
+        setLocationInMap(location)
+        getLoaltionDetails(location)
         loading?.dismiss()
     }
 
@@ -402,6 +341,22 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
             View.VISIBLE
         } else {
             View.GONE
+        }
+    }
+
+    private fun getLoaltionDetails(location: LatLng){
+        resultReceiver = AddressResultReceiver(Handler())
+        val intent = Intent(this, GeocoderService::class.java).apply {
+            putExtra(GeocoderService.Constants.RECEIVER, resultReceiver)
+            putExtra(GeocoderService.Constants.LOCATION_DATA_EXTRA, location)
+        }
+        startService(intent)
+    }
+
+    internal inner class AddressResultReceiver(handler: Handler) : ResultReceiver(handler) {
+        override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
+            val addressOutput = resultData?.getString(GeocoderService.Constants.RESULT_DATA_KEY) ?: ""
+            marker?.snippet = addressOutput
         }
     }
 }

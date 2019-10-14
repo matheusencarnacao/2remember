@@ -1,6 +1,7 @@
 package br.com.tworemember.localizer.activities
 
 import android.Manifest
+import android.app.ProgressDialog
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
@@ -18,7 +19,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import br.com.tworemember.localizer.R
-import br.com.tworemember.localizer.model.Position
 import br.com.tworemember.localizer.providers.DialogProvider
 import br.com.tworemember.localizer.providers.Preferences
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -42,6 +42,7 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
     private var marker: Marker? = null
     private var radiusSafe = 0
     private var item: MenuItem? = null
+    private var dialog: ProgressDialog? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,10 +53,14 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
         supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_arrow_back)
         title = "Area segura"
 
+        //TODO: ajustar rotina de pegar ultima posição
+        dialog = DialogProvider.showProgressDialog(this, "Carregando, aguarde...")
+
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        tv_title.visibility = View.GONE
         seekBar.visibility = View.GONE
         seekBar.onSeekChangeListener = object: OnSeekChangeListener {
             override fun onSeeking(seekParams: SeekParams?) {
@@ -89,8 +94,9 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         item?.let {
-            if(it.itemId == R.id.item_salvar){
-                saveConfig()
+            when {
+                it.itemId == R.id.item_salvar -> saveConfig()
+                it.itemId == android.R.id.home -> onBackPressed()
             }
         }
         return super.onOptionsItemSelected(item)
@@ -104,7 +110,7 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
                 myPosition?.let {
                     val prefs = Preferences(this@SafePlaceActivity)
                     prefs.setRaio(radiusSafe)
-                    prefs.setSafePosition(Position(it.latitude, it.longitude))
+                    prefs.setSafePosition(it)
                     startActivity(Intent(this@SafePlaceActivity,
                         BluetoothListActivity::class.java))
                     finish()
@@ -165,7 +171,9 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
         myPosition = myLocation
         updateMenuItem()
 
+        dialog?.dismiss()
         seekBar.visibility = View.VISIBLE
+        tv_title.visibility = View.VISIBLE
         if (marker == null){
             marker = mMap.addMarker(MarkerOptions().position(myLocation).title("Device is here!"))
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 16f))

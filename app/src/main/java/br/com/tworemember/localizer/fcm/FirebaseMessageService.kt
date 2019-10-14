@@ -35,8 +35,8 @@ class FirebaseMessageService : FirebaseMessagingService() {
 
     private fun outOfRange(data: Map<String, String>, type: String) {
         val id = 1
-        val title = "Fora da área segura"
-        val text = "Corre! o véio fugiu!"
+        val title = "Atenção! Fora da área segura"
+        val text = "O dispositivo saiu da area segura."
         val icon = R.drawable.ic_location_off_red_24dp
 
         val bundle = Bundle()
@@ -48,8 +48,8 @@ class FirebaseMessageService : FirebaseMessagingService() {
 
     private fun panicButton(data: Map<String, String>, type: String){
         val id = 2
-        val title = "Botão do pânico!"
-        val text = "Ai brother o véio ta pedindo ajuda!"
+        val title = "Atenção! Botão do pânico!"
+        val text = "O usuário pressionou o botão de ajuda. Verifique sua localização o quanto antes."
         val icon = R.drawable.ic_warning_red_24dp
 
         val status = (data["panicButton"] ?: error("")).toBoolean()
@@ -61,7 +61,7 @@ class FirebaseMessageService : FirebaseMessagingService() {
     private fun disconnectedBand(data: Map<String, String>, type: String){
         val id = 3
         val title = "Pulseira desconectada"
-        val text =  "Mano, poe a pulseira no seu veio"
+        val text =  "Percebemos que a pulseira não está sendo utilizada. Tenha certeza de que o usuário a esta utilizando para garantir o monitoramento."
         val icon = R.drawable.ic_person_off
 
         val status = (data["disconnectedBand"] ?: error("")).toBoolean()
@@ -72,8 +72,8 @@ class FirebaseMessageService : FirebaseMessagingService() {
 
     private fun lowBattery(data: Map<String, String>, type: String){
         val id = 4
-        val title = "Pulseira com bateria fraca"
-        val text =  "Ai doido, a bateria ta acabando"
+        val title = "Alerta! Pulseira com bateria fraca"
+        val text =  "O nível de bateria da pulseira esta baixo. Coloque para carregar e evite o descarregamento total."
         val icon = R.drawable.ic_battery_alert_red_24dp
 
         val status = (data["lowBattery"] ?: error("")).toBoolean()

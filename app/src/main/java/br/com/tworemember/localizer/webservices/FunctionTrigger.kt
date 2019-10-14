@@ -30,7 +30,7 @@ class FunctionTrigger {
                         position?.let{ EventBus.getDefault().post(LastLocationSucessEvent(it)) }
                         return
                     }
-                    EventBus.getDefault().post(LastLocationFailureEvent(response.message()))
+                    EventBus.getDefault().post(LastLocationFailureEvent(response.code().toString()))
                 }
 
             })

@@ -12,16 +12,12 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_alignParentEnd="true"
-            android:layout_marginBottom="11dp"
-            android:layout_marginLeft="11dp"
-            android:layout_marginRight="11dp"
             fab:menu_animationDelayPerItem="55"
             fab:menu_backgroundColor="@android:color/transparent"
             fab:menu_buttonSpacing="0dp"
             fab:menu_colorNormal="@color/colorPrimaryDark"
             fab:menu_colorPressed="@color/ColorPrimaryDarkPressed"
             fab:menu_colorRipple="#99d4d4d4"
-            fab:menu_fab_label="Mais opções"
             fab:menu_fab_size="normal"
             fab:menu_icon="@drawable/fab_add"
             fab:menu_labels_colorNormal="#333"
@@ -81,7 +77,8 @@
     </com.github.clans.fab.FloatingActionMenu>
 
     <com.github.clans.fab.FloatingActionButton
-            android:layout_alignBottom="@id/fab_menu"
+            android:layout_marginBottom="16dp"
+            android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
             android:id="@+id/fab_last_location"
             android:layout_width="wrap_content"

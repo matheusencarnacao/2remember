@@ -2,12 +2,14 @@ package br.com.tworemember.localizer.activities
 
 import android.content.DialogInterface
 import android.os.Bundle
+import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import br.com.tworemember.localizer.R
 import br.com.tworemember.localizer.providers.DialogProvider
 import br.com.tworemember.localizer.providers.Mask
 import br.com.tworemember.localizer.providers.Preferences
 import kotlinx.android.synthetic.main.activity_configuracao.*
+import kotlinx.android.synthetic.main.custom_toolbar.*
 
 class ConfiguracoesActivity : AppCompatActivity() {
 
@@ -29,6 +31,13 @@ class ConfiguracoesActivity : AppCompatActivity() {
         val prefs = Preferences(this)
         edt_tel.setText(prefs.getCelular())
         edt_nome.setText(prefs.getNome())
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when(item?.itemId){
+            android.R.id.home -> onBackPressed()
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     private fun salvar() {

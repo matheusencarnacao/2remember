@@ -2,9 +2,9 @@ package br.com.tworemember.localizer.providers
 
 import android.content.Context
 import android.content.SharedPreferences
-import br.com.tworemember.localizer.model.Position
 import br.com.tworemember.localizer.model.User
 import br.com.tworemember.localizer.webservices.model.CurrentPositionResponse
+import com.google.android.gms.maps.model.LatLng
 
 class Preferences(context: Context) {
 
@@ -39,14 +39,14 @@ class Preferences(context: Context) {
         return GsonConverter.fromJson(posJson, CurrentPositionResponse::class) as CurrentPositionResponse?
     }
 
-    fun setSafePosition(position: Position){
+    fun setSafePosition(position: LatLng){
         val posJson = GsonConverter.getJson(position)
         sharedPrefences.edit().putString("SafePosition", posJson).apply()
     }
 
-    fun getSafePosition() : Position? {
+    fun getSafePosition() : LatLng? {
         val posJson = sharedPrefences.getString("SafePosition", null) ?: return null
-        return GsonConverter.fromJson(posJson, Position::class) as Position?
+        return GsonConverter.fromJson(posJson, LatLng::class) as LatLng?
     }
 
     fun setRaio(raio: Int){

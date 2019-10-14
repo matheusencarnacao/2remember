@@ -23,4 +23,6 @@
     <string name="nome">Nome do usuário</string>
     <string name="celular">Celular de emergência</string>
     <string name="configuracoes">Configurações</string>
+    <string name="msg_tela_inicial">Localize e monitore pessoas com nosso dispositivo.</string>
+    <string name="msg_tela_inicial_2">Para continuar clique no botão de Login com o Facebook.</string>
 </resources>

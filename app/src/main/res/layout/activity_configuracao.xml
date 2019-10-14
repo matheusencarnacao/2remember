@@ -4,26 +4,8 @@
         android:orientation="vertical" android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-    <com.google.android.material.appbar.AppBarLayout
-            android:theme="@style/AppTheme.AppBarOverlay"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+    <include layout="@layout/custom_toolbar"/>
 
-        <androidx.appcompat.widget.Toolbar
-                android:theme="@style/AppTheme.PopupOverlay"
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"/>
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <TextView
-            android:textColor="@android:color/background_dark"
-            android:textStyle="bold"
-            android:textSize="20sp"
-            android:layout_margin="16dp"
-            android:text="@string/configuracoes"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
 
     <com.google.android.material.textfield.TextInputLayout
             android:layout_margin="16dp"

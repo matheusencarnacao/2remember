@@ -73,7 +73,7 @@ class ConnectThread(
 
         val safePosition = prefs.getSafePosition()
         safePosition?.let {
-            val conf = ConfiguracaoRaio(it.lat, it.lng, prefs.getRaio())
+            val conf = ConfiguracaoRaio(it.latitude, it.longitude, prefs.getRaio())
             val gson = Gson()
             val bytes = gson.toJson(conf).toByteArray()
             connectedThread.write(bytes)

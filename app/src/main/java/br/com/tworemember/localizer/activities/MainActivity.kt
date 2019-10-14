@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity(), View.OnClickListener {
 
         val buttonFacebookLogin = login_button as LoginButton
 
-        buttonFacebookLogin.setPermissions("email", "public_profile")
+        buttonFacebookLogin.setReadPermissions("email", "public_profile")
         buttonFacebookLogin.registerCallback(callbackManager, facebookCallback)
     }
 

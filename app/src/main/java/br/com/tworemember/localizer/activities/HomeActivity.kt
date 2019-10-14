@@ -5,16 +5,21 @@ package br.com.tworemember.localizer.activities
 import android.Manifest
 import android.app.Activity
 import android.app.ProgressDialog
+import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.graphics.Color
+import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.ResultReceiver
 import android.util.Log
+import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
+import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -25,14 +30,12 @@ import br.com.tworemember.localizer.providers.DialogProvider
 import br.com.tworemember.localizer.providers.Preferences
 import br.com.tworemember.localizer.webservices.*
 import br.com.tworemember.localizer.webservices.model.RegisterRequest
+import com.facebook.login.LoginManager
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.content_device_status.*
@@ -53,7 +56,8 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
     private var loading: ProgressDialog? = null
     private var lastLocation: LatLng? = null
     private lateinit var resultReceiver: AddressResultReceiver
-    private var marker:Marker? = null
+    private var marker: Marker? = null
+    private var circle: Circle? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,9 +79,10 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         modalConfig()
 
         qr_scanner.setOnClickListener { scanQrCode() }
+        sair.setOnClickListener { logout() }
 
         fab_area_segura.setOnClickListener { goToSafePlace() }
-        fab_logout.setOnClickListener { logout() }
+        fab_logout.setOnClickListener { showLogoutDialog() }
         fab_settings.setOnClickListener { goToSettings() }
         fab_last_location.setOnClickListener { zoomToLastLocation() }
 
@@ -87,6 +92,8 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onResume() {
         super.onResume()
         verifyRegister()
+        verifyZoomButton()
+        verifyRadius()
     }
 
     override fun onStart() {
@@ -99,7 +106,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         EventBus.getDefault().unregister(this)
     }
 
-    fun modalConfig() {
+    private fun modalConfig() {
         val prefs = Preferences(this)
         modal_panic_btn.visibility = if (prefs.isPanicButtonOn()) {
             View.VISIBLE
@@ -132,20 +139,30 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun goToSettings() {
-//        Toast.makeText(this, "Em breve...", Toast.LENGTH_SHORT).show()
         startActivity(
             Intent(this, ConfiguracoesActivity::class.java)
         )
     }
 
-    fun goToSafePlace() {
+    private fun goToSafePlace() {
         val intent = Intent(this@HomeActivity, SafePlaceActivity::class.java)
         startActivity(intent)
+    }
+
+    private fun showLogoutDialog() {
+        DialogProvider.showAlertDialog(this,
+            "Deseja realizar logout?", "Logout",
+            DialogInterface.OnClickListener { dialog, _ ->
+                dialog.dismiss()
+                logout()
+            }).show()
     }
 
     fun logout() {
         val auth = FirebaseAuth.getInstance()
         auth.signOut()
+        val faceAuth = LoginManager.getInstance()
+        faceAuth.logOut()
 
         val intent = Intent(this, MainActivity::class.java)
         startActivity(intent)
@@ -158,6 +175,14 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
             View.VISIBLE
         } else {
             View.GONE
+        }
+    }
+
+    private fun verifyZoomButton(){
+        fab_last_location.visibility = if (lastLocation == null) {
+            View.GONE
+        } else {
+            View.VISIBLE
         }
     }
 
@@ -189,14 +214,40 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         lastLocation = location
         val icon = BitmapDescriptorFactory.fromResource(R.drawable.ic_person_pin_circle)
         mMap?.clear()
-        //TODO: nome do dispositivo
+
+        val prefs = Preferences(this)
+        val nome = if (prefs.getNome().isEmpty()) {
+            "Pulseira"
+        } else {
+            prefs.getNome()
+        }
+
+        verifyRadius()
+        verifyZoomButton()
+
         marker = mMap?.addMarker(
             MarkerOptions()
                 .position(location)
-                .title("Device is here!")
+                .title(nome)
                 .icon(icon)
         )
         zoomToLastLocation()
+    }
+
+    private fun verifyRadius(){
+        val prefs = Preferences(this)
+        if(prefs.getRaio() > 0 && prefs.getSafePosition() != null){
+            if(circle == null){
+                circle = mMap?.addCircle(
+                    CircleOptions()
+                        .center(prefs.getSafePosition())
+                        .radius(prefs.getRaio().toDouble())
+                        .strokeWidth(0f)
+                        .fillColor(0x330000FF))
+            } else {
+                circle?.radius = prefs.getRaio().toDouble()
+            }
+        }
     }
 
     private fun askPermission(permissions: Array<String>) {
@@ -224,6 +275,60 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+
+        mMap?.let {
+
+
+            it.setInfoWindowAdapter(object: GoogleMap.InfoWindowAdapter {
+                override fun getInfoContents(p0: Marker?): View {
+                    val info = LinearLayout(this@HomeActivity)
+                    info.setOrientation(LinearLayout.VERTICAL)
+
+                    //TODO: melhorar esse window
+
+                    val title = TextView(this@HomeActivity).also { t ->
+                        t.setTextColor(Color.BLACK)
+                        t.gravity = Gravity.CENTER
+                        t.setTypeface(null, Typeface.BOLD)
+                        t.text = marker?.title
+                    }
+
+
+                    val snippet = TextView(this@HomeActivity).also {s ->
+                        s.setTextColor(Color.GRAY)
+                        s.text = marker?.snippet
+                    }
+
+                    with(info) {
+                        addView(title)
+                        addView(snippet)
+                    }
+
+                    return info
+                }
+
+                override fun getInfoWindow(p0: Marker?): View? {
+                    return null
+                }
+
+            })
+
+            try {
+                val success = it.setMapStyle(
+                    MapStyleOptions.loadRawResourceStyle(
+                        this, R.raw.maps_style
+                    )
+                )
+
+                if (!success) {
+                    Log.e("HomeActivity", "Style parsing failed.")
+                } else {
+                    Log.d("HomeActivity", "Map stylef")
+                }
+            } catch (e: Resources.NotFoundException) {
+                Log.e("HomeActivity", "Can't find style. Error: ", e)
+            }
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -243,7 +348,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    fun macValidate(mac: String): Boolean {
+    private fun macValidate(mac: String): Boolean {
         val p = Pattern.compile("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$")
         val m = p.matcher(mac)
         return m.find()
@@ -267,9 +372,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun createLoading(message: String): ProgressDialog {
-        val dialog =
-            DialogProvider.showProgressDialog(this, message)
-        return dialog
+        return DialogProvider.showProgressDialog(this, message)
     }
 
     private fun callRegisterFunction(req: RegisterRequest) {
@@ -288,6 +391,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
             }
 
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                loading?.dismiss()
                 if (response.isSuccessful) {
                     Toast.makeText(
                         this@HomeActivity,
@@ -323,15 +427,21 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         setLocationInMap(location)
         getLoaltionDetails(location)
         loading?.dismiss()
+        verifyZoomButton()
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onLOcationFailed(event: LastLocationFailureEvent) {
         Log.d("${event.javaClass.simpleName}: ", event.errorMessage)
-        Toast.makeText(
-            this@HomeActivity, "Erro ao carregar localização do dispositivo",
-            Toast.LENGTH_SHORT
-        ).show()
+        if (event.errorMessage == "404") {
+            Toast.makeText(this@HomeActivity, "Nenhuma localização encontrada", Toast.LENGTH_LONG)
+                .show()
+        } else {
+            Toast.makeText(
+                this@HomeActivity, "Erro ao carregar localização do dispositivo",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
         loading?.dismiss()
     }
 
@@ -344,7 +454,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun getLoaltionDetails(location: LatLng){
+    private fun getLoaltionDetails(location: LatLng) {
         resultReceiver = AddressResultReceiver(Handler())
         val intent = Intent(this, GeocoderService::class.java).apply {
             putExtra(GeocoderService.Constants.RECEIVER, resultReceiver)
@@ -355,7 +465,8 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
     internal inner class AddressResultReceiver(handler: Handler) : ResultReceiver(handler) {
         override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
-            val addressOutput = resultData?.getString(GeocoderService.Constants.RESULT_DATA_KEY) ?: ""
+            val addressOutput =
+                resultData?.getString(GeocoderService.Constants.RESULT_DATA_KEY) ?: ""
             marker?.snippet = addressOutput
         }
     }

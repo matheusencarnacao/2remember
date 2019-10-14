@@ -8,9 +8,9 @@ import android.app.ProgressDialog
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.Resources
 import android.graphics.Color
 import android.graphics.Typeface
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -19,6 +19,7 @@ import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -27,6 +28,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import br.com.tworemember.localizer.R
 import br.com.tworemember.localizer.providers.DialogProvider
+import br.com.tworemember.localizer.providers.MapsUtils
 import br.com.tworemember.localizer.providers.Preferences
 import br.com.tworemember.localizer.webservices.*
 import br.com.tworemember.localizer.webservices.model.RegisterRequest
@@ -47,6 +49,7 @@ import org.greenrobot.eventbus.ThreadMode
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.util.*
 import java.util.regex.Pattern
 
 
@@ -81,19 +84,60 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         qr_scanner.setOnClickListener { scanQrCode() }
         sair.setOnClickListener { logout() }
 
-        fab_area_segura.setOnClickListener { goToSafePlace() }
-        fab_logout.setOnClickListener { showLogoutDialog() }
-        fab_settings.setOnClickListener { goToSettings() }
+        fab_area_segura.setOnClickListener { fab_menu.close(true); goToSafePlace() }
+        fab_logout.setOnClickListener { fab_menu.close(true); showLogoutDialog() }
+        fab_settings.setOnClickListener { fab_menu.close(true); goToSettings() }
         fab_last_location.setOnClickListener { zoomToLastLocation() }
+        fab_tel.setOnClickListener { ligar() }
+        fab_gmap.setOnClickListener { abrirGMaps() }
 
         LocationScheduler.startService(this)
     }
 
+    private fun abrirGMaps() {
+        lastLocation?.let {
+            val gmmIntentUri = Uri.parse("google.navigation:q=${it.latitude},${it.longitude}")
+            val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+            mapIntent.setPackage("com.google.android.apps.maps")
+            startActivity(mapIntent)
+        }
+    }
+
+    private fun ligar() {
+        val prefs = Preferences(this)
+        val cel = prefs.getCelular()
+        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$cel"))
+        startActivity(intent)
+    }
+
     override fun onResume() {
         super.onResume()
+        updateUI()
+    }
+
+    private fun updateUI() {
         verifyRegister()
         verifyZoomButton()
         verifyRadius()
+        verifyFABCel()
+        verifyFABMap()
+    }
+
+    private fun verifyFABCel() {
+        val prefs = Preferences(this)
+        fab_tel.visibility = if (prefs.getCelular().isNotEmpty()) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
+    }
+
+    private fun verifyFABMap(){
+        fab_gmap.visibility = if (lastLocation != null) {
+            View.VISIBLE
+        } else {
+            View.GONE
+        }
     }
 
     override fun onStart() {
@@ -178,7 +222,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-    private fun verifyZoomButton(){
+    private fun verifyZoomButton() {
         fab_last_location.visibility = if (lastLocation == null) {
             View.GONE
         } else {
@@ -224,6 +268,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
         verifyRadius()
         verifyZoomButton()
+        verifyFABMap()
 
         marker = mMap?.addMarker(
             MarkerOptions()
@@ -234,16 +279,17 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         zoomToLastLocation()
     }
 
-    private fun verifyRadius(){
+    private fun verifyRadius() {
         val prefs = Preferences(this)
-        if(prefs.getRaio() > 0 && prefs.getSafePosition() != null){
-            if(circle == null){
+        if (prefs.getRaio() > 0 && prefs.getSafePosition() != null) {
+            if (circle == null) {
                 circle = mMap?.addCircle(
                     CircleOptions()
                         .center(prefs.getSafePosition())
                         .radius(prefs.getRaio().toDouble())
                         .strokeWidth(0f)
-                        .fillColor(0x330000FF))
+                        .fillColor(0x330000FF)
+                )
             } else {
                 circle?.radius = prefs.getRaio().toDouble()
             }
@@ -275,16 +321,22 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        mMap?.uiSettings?.isMapToolbarEnabled = false
 
         mMap?.let {
 
 
-            it.setInfoWindowAdapter(object: GoogleMap.InfoWindowAdapter {
+            it.setInfoWindowAdapter(object : GoogleMap.InfoWindowAdapter {
                 override fun getInfoContents(p0: Marker?): View {
                     val info = LinearLayout(this@HomeActivity)
                     info.setOrientation(LinearLayout.VERTICAL)
 
-                    //TODO: melhorar esse window
+                    val layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    layoutParams.setMargins(32, 0, 32, 0)
+
 
                     val title = TextView(this@HomeActivity).also { t ->
                         t.setTextColor(Color.BLACK)
@@ -294,14 +346,14 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
                     }
 
 
-                    val snippet = TextView(this@HomeActivity).also {s ->
+                    val snippet = TextView(this@HomeActivity).also { s ->
                         s.setTextColor(Color.GRAY)
                         s.text = marker?.snippet
                     }
 
                     with(info) {
-                        addView(title)
-                        addView(snippet)
+                        addView(title, layoutParams)
+                        addView(snippet, layoutParams)
                     }
 
                     return info
@@ -313,21 +365,8 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
             })
 
-            try {
-                val success = it.setMapStyle(
-                    MapStyleOptions.loadRawResourceStyle(
-                        this, R.raw.maps_style
-                    )
-                )
-
-                if (!success) {
-                    Log.e("HomeActivity", "Style parsing failed.")
-                } else {
-                    Log.d("HomeActivity", "Map stylef")
-                }
-            } catch (e: Resources.NotFoundException) {
-                Log.e("HomeActivity", "Can't find style. Error: ", e)
-            }
+            val utils = MapsUtils(it)
+            utils.styleMap(this)
         }
     }
 

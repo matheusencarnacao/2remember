@@ -2,13 +2,10 @@ package br.com.tworemember.localizer.activities
 
 import android.Manifest
 import android.app.ProgressDialog
-import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.location.Criteria
 import android.location.Location
-import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import android.view.Menu
@@ -20,7 +17,10 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import br.com.tworemember.localizer.R
 import br.com.tworemember.localizer.providers.DialogProvider
+import br.com.tworemember.localizer.providers.MapsUtils
 import br.com.tworemember.localizer.providers.Preferences
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -36,6 +36,7 @@ import kotlinx.android.synthetic.main.custom_toolbar.*
 class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationManager: LocationManager
     private var myPosition : LatLng? = null
     private var circle: Circle? = null
@@ -53,12 +54,13 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
         supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_arrow_back)
         title = "Area segura"
 
-        //TODO: ajustar rotina de pegar ultima posição
         dialog = DialogProvider.showProgressDialog(this, "Carregando, aguarde...")
 
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         tv_title.visibility = View.GONE
         seekBar.visibility = View.GONE
@@ -140,18 +142,12 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
             return
         }
 
-        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        locationManager.requestLocationUpdates(
-            getBestProvider(),
-            2000,
-            1f,
-            locationListener
-        )
-    }
-
-    private fun getBestProvider() : String {
-        val criteria = Criteria()
-        return locationManager.getBestProvider(criteria, false)
+        fusedLocationClient.lastLocation
+            .addOnSuccessListener { location : Location? ->
+                location?.let {
+                    setLocationInMap(LatLng(it.latitude, it.longitude))
+                }
+            }
     }
 
     private fun setRadius(radius: Double){
@@ -175,21 +171,14 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
         seekBar.visibility = View.VISIBLE
         tv_title.visibility = View.VISIBLE
         if (marker == null){
-            marker = mMap.addMarker(MarkerOptions().position(myLocation).title("Device is here!"))
+            marker = mMap.addMarker(MarkerOptions()
+                .position(myLocation)
+                .title("Você esta aqui!")
+                .snippet("Esta será o centro da area segura."))
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(myLocation, 16f))
         } else {
             marker?.position = myLocation
         }
-    }
-
-    private fun getLastLocation() {
-        if (checkPermission(Manifest.permission.ACCESS_COARSE_LOCATION) ||
-            checkPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
-            askPermission()
-            return
-        }
-        val location = locationManager.getLastKnownLocation(getBestProvider())
-        setLocationInMap(LatLng(location.altitude, location.longitude))
     }
 
     override fun onRequestPermissionsResult(
@@ -209,31 +198,11 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
         }
     }
 
-
-    private val locationListener = object : LocationListener {
-        override fun onLocationChanged(location: Location?) {
-            if (location != null)
-                setLocationInMap(LatLng(location.latitude, location.longitude))
-            else
-                getLastLocation()
-        }
-
-        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
-
-        override fun onProviderEnabled(provider: String?) {}
-
-        override fun onProviderDisabled(provider: String?) {
-            Toast.makeText(
-                this@SafePlaceActivity,
-                "O recurso de GPS está desabilitado neste aparelho",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
-
     override fun onMapReady(p0: GoogleMap) {
         mMap = p0
-        //mMap.isMyLocationEnabled = true
+        mMap.uiSettings.isMapToolbarEnabled = false
         getLocation()
+        val utils = MapsUtils(mMap)
+        utils.styleMap(this)
     }
 }

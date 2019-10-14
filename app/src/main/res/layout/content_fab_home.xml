@@ -43,6 +43,28 @@
             fab:menu_showShadow="true">
 
         <com.github.clans.fab.FloatingActionButton
+                android:id="@+id/fab_gmap"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                fab:fab_label="Ir ate a pulseira"
+                fab:fab_colorNormal="@color/colorPrimary"
+                fab:fab_colorPressed="@color/colorPrimaryPressed"
+                android:src="@drawable/ic_map_white_24dp"
+                fab:fab_size="mini"
+                tools:ignore="VectorDrawableCompat" />
+
+        <com.github.clans.fab.FloatingActionButton
+                android:id="@+id/fab_tel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                fab:fab_label="Ligar"
+                fab:fab_colorNormal="@color/colorPrimary"
+                fab:fab_colorPressed="@color/colorPrimaryPressed"
+                android:src="@drawable/ic_local_phone_white_24dp"
+                fab:fab_size="mini"
+                tools:ignore="VectorDrawableCompat" />
+
+        <com.github.clans.fab.FloatingActionButton
                 android:id="@+id/fab_logout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

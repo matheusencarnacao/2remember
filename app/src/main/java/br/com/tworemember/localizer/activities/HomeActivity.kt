@@ -19,7 +19,6 @@ import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
-import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -27,6 +26,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import br.com.tworemember.localizer.R
+import br.com.tworemember.localizer.fcm.TokenProvider
 import br.com.tworemember.localizer.providers.DialogProvider
 import br.com.tworemember.localizer.providers.MapsUtils
 import br.com.tworemember.localizer.providers.Preferences
@@ -49,7 +49,6 @@ import org.greenrobot.eventbus.ThreadMode
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.util.*
 import java.util.regex.Pattern
 
 
@@ -84,12 +83,14 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
         qr_scanner.setOnClickListener { scanQrCode() }
         sair.setOnClickListener { logout() }
 
+        fab_gmap.isEnabled = false
+        fab_tel.isEnabled = false
         fab_area_segura.setOnClickListener { fab_menu.close(true); goToSafePlace() }
         fab_logout.setOnClickListener { fab_menu.close(true); showLogoutDialog() }
         fab_settings.setOnClickListener { fab_menu.close(true); goToSettings() }
+        fab_tel.setOnClickListener { fab_menu.close(true); ligar() }
+        fab_gmap.setOnClickListener { fab_menu.close(true); abrirGMaps() }
         fab_last_location.setOnClickListener { zoomToLastLocation() }
-        fab_tel.setOnClickListener { ligar() }
-        fab_gmap.setOnClickListener { abrirGMaps() }
 
         LocationScheduler.startService(this)
     }
@@ -112,6 +113,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
     override fun onResume() {
         super.onResume()
+        TokenProvider.sendToken(this)
         updateUI()
     }
 
@@ -125,19 +127,11 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private fun verifyFABCel() {
         val prefs = Preferences(this)
-        fab_tel.visibility = if (prefs.getCelular().isNotEmpty()) {
-            View.VISIBLE
-        } else {
-            View.GONE
-        }
+        fab_tel.isEnabled = prefs.getCelular().isNotEmpty()
     }
 
     private fun verifyFABMap(){
-        fab_gmap.visibility = if (lastLocation != null) {
-            View.VISIBLE
-        } else {
-            View.GONE
-        }
+        fab_gmap.isEnabled = lastLocation != null
     }
 
     override fun onStart() {
@@ -251,13 +245,12 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
     private fun zoomToLastLocation() {
-        lastLocation?.let { mMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(it, 15f)) }
+        lastLocation?.let { mMap?.moveCamera(CameraUpdateFactory.newLatLngZoom(it, 17f)) }
     }
 
     private fun setLocationInMap(location: LatLng) {
         lastLocation = location
         val icon = BitmapDescriptorFactory.fromResource(R.drawable.ic_person_pin_circle)
-        mMap?.clear()
 
         val prefs = Preferences(this)
         val nome = if (prefs.getNome().isEmpty()) {
@@ -266,7 +259,6 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
             prefs.getNome()
         }
 
-        verifyRadius()
         verifyZoomButton()
         verifyFABMap()
 
@@ -277,6 +269,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
                 .icon(icon)
         )
         zoomToLastLocation()
+        verifyRadius()
     }
 
     private fun verifyRadius() {
@@ -285,7 +278,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
             if (circle == null) {
                 circle = mMap?.addCircle(
                     CircleOptions()
-                        .center(prefs.getSafePosition())
+                        .center(prefs.getSafePosition()!!)
                         .radius(prefs.getRaio().toDouble())
                         .strokeWidth(0f)
                         .fillColor(0x330000FF)
@@ -459,7 +452,7 @@ class HomeActivity : AppCompatActivity(), OnMapReadyCallback {
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     fun onLocationSucess(event: LastLocationSucessEvent) {
-        Toast.makeText(this@HomeActivity, "LOocalização atualizada", Toast.LENGTH_SHORT)
+        Toast.makeText(this@HomeActivity, "Localização atualizada", Toast.LENGTH_SHORT)
             .show()
         val position = event.location
         val location = LatLng(position.lat, position.lng)

@@ -50,8 +50,10 @@ class SafePlaceActivity : AppCompatActivity(), OnMapReadyCallback {
         setContentView(R.layout.activity_safe_place)
 
         setSupportActionBar(toolbar)
-        supportActionBar?.setHomeButtonEnabled(true)
-        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_arrow_back)
+        supportActionBar?.let {
+            it.setDisplayHomeAsUpEnabled(true)
+            it.setHomeAsUpIndicator(R.drawable.ic_arrow_back_white)
+        }
         title = "Area segura"
 
         dialog = DialogProvider.showProgressDialog(this, "Carregando, aguarde...")
